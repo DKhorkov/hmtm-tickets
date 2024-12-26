@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  hmtm_tickets:
+    container_name: hmtm_tickets
+    image: hmtm_tickets
+    build:
+      context: ../..
+      dockerfile: ./build/package/Dockerfile
+    ports:
+      - "${HMTM_TICKETS_OUTER_PORT}:${HMTM_TICKETS_INNER_PORT}"
+    depends_on:
+      - hmtm_tickets_database
+    volumes:
+      - ../../logs/:/app/logs/
+
+  hmtm_tickets_database:
+    container_name: hmtm_tickets_database
+    hostname: hmtm_tickets_database
+    image: postgres
+    restart: always
+    env_file:
+      - ../../.env
+    volumes:
+      - ../../postgres_data:/var/lib/postgresql/data
+      - ../../postgres_backups:/backups
+      - ../../scripts/postgres:/scripts
+    ports:
+      - "${HMTM_TICKETS_DB_OUTER_PORT}:${HMTM_TICKETS_DB_INNER_PORT}"

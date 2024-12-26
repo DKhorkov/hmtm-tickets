@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package tickets;
+
+option go_package = "github.com/DKhorkov/hmtm-tickets/api/protobuf/tickets;tickets";
+
+
+service TicketsService {
+  rpc CreateTicket(CreateTicketIn) returns (CreateTicketOut) {}
+  rpc GetTicket(GetTicketIn) returns (GetTicketOut) {}
+  rpc GetTickets(GetTicketsIn) returns (GetTicketsOut) {}
+  rpc GetMyTickets(GetMyTicketsIn) returns (GetTicketsOut) {}
+}
+
+message CreateTicketIn {
+  string requestID = 1;
+  string accessToken = 2;
+  string name = 3;
+  string description = 4;
+  float price = 5;
+  uint32 quantity = 6;
+  uint32 categoryID = 7;
+  repeated uint32 tagIDs = 8;
+}
+
+message CreateTicketOut {
+  uint64 ticketID = 1;
+}
+
+message GetTicketIn {
+  string requestID = 1;
+  uint64 ID = 2;
+}
+
+message GetTicketOut {
+  uint64 ID = 1;
+  uint64 userID = 2;
+  string name = 3;
+  string description = 4;
+  float price = 5;
+  uint32 quantity = 6;
+  uint32 categoryID = 7;
+  repeated uint32 tagIDs = 8;
+  google.protobuf.Timestamp createdAt = 9;
+  google.protobuf.Timestamp updatedAt = 10;
+}
+
+message GetTicketsIn {
+  string requestID = 1;
+}
+
+message GetTicketsOut {
+  repeated GetTicketOut tickets = 1;
+}
+
+message GetMyTicketsIn {
+  string requestID = 1;
+  string accessToken = 2;
+}

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package responds;
+
+option go_package = "github.com/DKhorkov/hmtm-tickets/api/protobuf/tickets;tickets";
+
+
+service RespondsService {
+  rpc RespondToTicket(RespondToTicketIn) returns (RespondToTicketOut) {}
+  rpc GetRespond(GetRespondIn) returns (GetRespondOut) {}
+  rpc GetTicketResponds(GetTicketRespondsIn) returns (GetTicketRespondsOut) {}
+  rpc GetMyResponds(GetMyRespondsIn) returns (GetTicketRespondsOut) {}
+  rpc GetProposedResponds(GetProposedRespondsIn) returns (GetTicketRespondsOut) {}
+}
+
+message RespondToTicketIn {
+  string requestID = 1;
+  string accessToken = 2;
+  uint64 ticketID = 3;
+}
+
+message RespondToTicketOut {
+  uint64 respondID = 1;
+}
+
+message GetRespondIn {
+  string requestID = 1;
+  string accessToken = 2;
+  uint64 ID = 3;
+}
+
+message GetRespondOut {
+  uint64 ID = 1;
+  uint64 ticketID = 2;
+  uint64 masterID = 3;
+  google.protobuf.Timestamp createdAt = 9;
+  google.protobuf.Timestamp updatedAt = 10;
+}
+
+message GetTicketRespondsIn {
+  string requestID = 1;
+  string accessToken = 2;
+  uint64 ticketID = 3;
+}
+
+message GetTicketRespondsOut {
+  repeated GetRespondOut responds = 1;
+}
+
+message GetMyRespondsIn {
+  string requestID = 1;
+  string accessToken = 2;
+}
+
+message GetProposedRespondsIn {
+  string requestID = 1;
+  string accessToken = 2;
+}
