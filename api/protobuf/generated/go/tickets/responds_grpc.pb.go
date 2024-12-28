@@ -20,9 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type RespondsServiceClient interface {
 	RespondToTicket(ctx context.Context, in *RespondToTicketIn, opts ...grpc.CallOption) (*RespondToTicketOut, error)
 	GetRespond(ctx context.Context, in *GetRespondIn, opts ...grpc.CallOption) (*GetRespondOut, error)
-	GetTicketResponds(ctx context.Context, in *GetTicketRespondsIn, opts ...grpc.CallOption) (*GetTicketRespondsOut, error)
-	GetMyResponds(ctx context.Context, in *GetMyRespondsIn, opts ...grpc.CallOption) (*GetTicketRespondsOut, error)
-	GetProposedResponds(ctx context.Context, in *GetProposedRespondsIn, opts ...grpc.CallOption) (*GetTicketRespondsOut, error)
+	GetTicketResponds(ctx context.Context, in *GetTicketRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error)
+	GetMyResponds(ctx context.Context, in *GetMyRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error)
 }
 
 type respondsServiceClient struct {
@@ -51,8 +50,8 @@ func (c *respondsServiceClient) GetRespond(ctx context.Context, in *GetRespondIn
 	return out, nil
 }
 
-func (c *respondsServiceClient) GetTicketResponds(ctx context.Context, in *GetTicketRespondsIn, opts ...grpc.CallOption) (*GetTicketRespondsOut, error) {
-	out := new(GetTicketRespondsOut)
+func (c *respondsServiceClient) GetTicketResponds(ctx context.Context, in *GetTicketRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error) {
+	out := new(GetRespondsOut)
 	err := c.cc.Invoke(ctx, "/responds.RespondsService/GetTicketResponds", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -60,18 +59,9 @@ func (c *respondsServiceClient) GetTicketResponds(ctx context.Context, in *GetTi
 	return out, nil
 }
 
-func (c *respondsServiceClient) GetMyResponds(ctx context.Context, in *GetMyRespondsIn, opts ...grpc.CallOption) (*GetTicketRespondsOut, error) {
-	out := new(GetTicketRespondsOut)
+func (c *respondsServiceClient) GetMyResponds(ctx context.Context, in *GetMyRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error) {
+	out := new(GetRespondsOut)
 	err := c.cc.Invoke(ctx, "/responds.RespondsService/GetMyResponds", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *respondsServiceClient) GetProposedResponds(ctx context.Context, in *GetProposedRespondsIn, opts ...grpc.CallOption) (*GetTicketRespondsOut, error) {
-	out := new(GetTicketRespondsOut)
-	err := c.cc.Invoke(ctx, "/responds.RespondsService/GetProposedResponds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +74,8 @@ func (c *respondsServiceClient) GetProposedResponds(ctx context.Context, in *Get
 type RespondsServiceServer interface {
 	RespondToTicket(context.Context, *RespondToTicketIn) (*RespondToTicketOut, error)
 	GetRespond(context.Context, *GetRespondIn) (*GetRespondOut, error)
-	GetTicketResponds(context.Context, *GetTicketRespondsIn) (*GetTicketRespondsOut, error)
-	GetMyResponds(context.Context, *GetMyRespondsIn) (*GetTicketRespondsOut, error)
-	GetProposedResponds(context.Context, *GetProposedRespondsIn) (*GetTicketRespondsOut, error)
+	GetTicketResponds(context.Context, *GetTicketRespondsIn) (*GetRespondsOut, error)
+	GetMyResponds(context.Context, *GetMyRespondsIn) (*GetRespondsOut, error)
 	mustEmbedUnimplementedRespondsServiceServer()
 }
 
@@ -100,14 +89,11 @@ func (UnimplementedRespondsServiceServer) RespondToTicket(context.Context, *Resp
 func (UnimplementedRespondsServiceServer) GetRespond(context.Context, *GetRespondIn) (*GetRespondOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRespond not implemented")
 }
-func (UnimplementedRespondsServiceServer) GetTicketResponds(context.Context, *GetTicketRespondsIn) (*GetTicketRespondsOut, error) {
+func (UnimplementedRespondsServiceServer) GetTicketResponds(context.Context, *GetTicketRespondsIn) (*GetRespondsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTicketResponds not implemented")
 }
-func (UnimplementedRespondsServiceServer) GetMyResponds(context.Context, *GetMyRespondsIn) (*GetTicketRespondsOut, error) {
+func (UnimplementedRespondsServiceServer) GetMyResponds(context.Context, *GetMyRespondsIn) (*GetRespondsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMyResponds not implemented")
-}
-func (UnimplementedRespondsServiceServer) GetProposedResponds(context.Context, *GetProposedRespondsIn) (*GetTicketRespondsOut, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProposedResponds not implemented")
 }
 func (UnimplementedRespondsServiceServer) mustEmbedUnimplementedRespondsServiceServer() {}
 
@@ -194,24 +180,6 @@ func _RespondsService_GetMyResponds_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RespondsService_GetProposedResponds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetProposedRespondsIn)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RespondsServiceServer).GetProposedResponds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/responds.RespondsService/GetProposedResponds",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RespondsServiceServer).GetProposedResponds(ctx, req.(*GetProposedRespondsIn))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // RespondsService_ServiceDesc is the grpc.ServiceDesc for RespondsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -234,10 +202,6 @@ var RespondsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMyResponds",
 			Handler:    _RespondsService_GetMyResponds_Handler,
-		},
-		{
-			MethodName: "GetProposedResponds",
-			Handler:    _RespondsService_GetProposedResponds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

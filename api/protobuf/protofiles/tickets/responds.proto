@@ -10,9 +10,8 @@ option go_package = "github.com/DKhorkov/hmtm-tickets/api/protobuf/tickets;ticke
 service RespondsService {
   rpc RespondToTicket(RespondToTicketIn) returns (RespondToTicketOut) {}
   rpc GetRespond(GetRespondIn) returns (GetRespondOut) {}
-  rpc GetTicketResponds(GetTicketRespondsIn) returns (GetTicketRespondsOut) {}
-  rpc GetMyResponds(GetMyRespondsIn) returns (GetTicketRespondsOut) {}
-  rpc GetProposedResponds(GetProposedRespondsIn) returns (GetTicketRespondsOut) {}
+  rpc GetTicketResponds(GetTicketRespondsIn) returns (GetRespondsOut) {}
+  rpc GetMyResponds(GetMyRespondsIn) returns (GetRespondsOut) {}
 }
 
 message RespondToTicketIn {
@@ -45,16 +44,11 @@ message GetTicketRespondsIn {
   uint64 ticketID = 3;
 }
 
-message GetTicketRespondsOut {
+message GetRespondsOut {
   repeated GetRespondOut responds = 1;
 }
 
 message GetMyRespondsIn {
-  string requestID = 1;
-  string accessToken = 2;
-}
-
-message GetProposedRespondsIn {
   string requestID = 1;
   string accessToken = 2;
 }
