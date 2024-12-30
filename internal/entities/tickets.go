@@ -24,13 +24,3 @@ type CreateTicketDTO struct {
 	Quantity    uint32   `json:"quantity"`
 	TagsIDs     []uint32 `json:"tag_ids"`
 }
-
-type RawCreateTicketDTO struct {
-	AccessToken string   `json:"access_token"`
-	CategoryID  uint32   `json:"category_id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Price       float32  `json:"price"`
-	Quantity    uint32   `json:"quantity"`
-	TagsIDs     []uint32 `json:"tag_ids"`
-}

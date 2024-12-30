@@ -11,11 +11,11 @@ type Respond struct {
 }
 
 type RespondToTicketDTO struct {
-	MasterID uint64 `json:"master_id"`
 	TicketID uint64 `json:"ticket_id"`
+	MasterID uint64 `json:"master_id"`
 }
 
 type RawRespondToTicketDTO struct {
-	AccessToken string `json:"access_token"`
-	TicketID    uint64 `json:"ticket_id"`
+	TicketID uint64 `json:"ticket_id"`
+	UserID   uint64 `json:"user_id"`
 }

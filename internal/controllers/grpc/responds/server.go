@@ -16,7 +16,6 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/security"
 )
 
 // RegisterServer handler (serverAPI) for RespondsServer to gRPC server:.
@@ -37,8 +36,8 @@ func (api *ServerAPI) RespondToTicket(
 	in *tickets.RespondToTicketIn,
 ) (*tickets.RespondToTicketOut, error) {
 	respondData := entities.RawRespondToTicketDTO{
-		AccessToken: in.GetAccessToken(),
-		TicketID:    in.GetTicketID(),
+		UserID:   in.GetUserID(),
+		TicketID: in.GetTicketID(),
 	}
 
 	respondID, err := api.useCases.RespondToTicket(ctx, respondData)
@@ -46,8 +45,6 @@ func (api *ServerAPI) RespondToTicket(
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to respond to Ticket", err)
 
 		switch {
-		case errors.As(err, &security.InvalidJWTError{}):
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		case errors.As(err, &customerrors.RespondAlreadyExistsError{}):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
@@ -117,30 +114,25 @@ func (api *ServerAPI) GetTicketResponds(
 	return &tickets.GetRespondsOut{Responds: processedResponds}, nil
 }
 
-// GetMyResponds handler returns Responds for current User.
-func (api *ServerAPI) GetMyResponds(
+// GetUserResponds handler returns Responds for User with provided ID.
+func (api *ServerAPI) GetUserResponds(
 	ctx context.Context,
-	in *tickets.GetMyRespondsIn,
+	in *tickets.GetUserRespondsIn,
 ) (*tickets.GetRespondsOut, error) {
-	myResponds, err := api.useCases.GetMyResponds(ctx, in.GetAccessToken())
+	userResponds, err := api.useCases.GetUserResponds(ctx, in.GetUserID())
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get Responds for user with AccessToken=%s", in.GetAccessToken()),
+			fmt.Sprintf("Error occurred while trying to get Responds for User with ID=%d", in.GetUserID()),
 			err,
 		)
 
-		switch {
-		case errors.As(err, &security.InvalidJWTError{}):
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		default:
-			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
-		}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
-	processedResponds := make([]*tickets.GetRespondOut, len(myResponds))
-	for i, respond := range myResponds {
+	processedResponds := make([]*tickets.GetRespondOut, len(userResponds))
+	for i, respond := range userResponds {
 		processedResponds[i] = &tickets.GetRespondOut{
 			ID:        respond.ID,
 			TicketID:  respond.TicketID,

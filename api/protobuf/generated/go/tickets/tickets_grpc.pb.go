@@ -21,7 +21,7 @@ type TicketsServiceClient interface {
 	CreateTicket(ctx context.Context, in *CreateTicketIn, opts ...grpc.CallOption) (*CreateTicketOut, error)
 	GetTicket(ctx context.Context, in *GetTicketIn, opts ...grpc.CallOption) (*GetTicketOut, error)
 	GetTickets(ctx context.Context, in *GetTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
-	GetMyTickets(ctx context.Context, in *GetMyTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
+	GetUserTickets(ctx context.Context, in *GetUserTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
 }
 
 type ticketsServiceClient struct {
@@ -59,9 +59,9 @@ func (c *ticketsServiceClient) GetTickets(ctx context.Context, in *GetTicketsIn,
 	return out, nil
 }
 
-func (c *ticketsServiceClient) GetMyTickets(ctx context.Context, in *GetMyTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error) {
+func (c *ticketsServiceClient) GetUserTickets(ctx context.Context, in *GetUserTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error) {
 	out := new(GetTicketsOut)
-	err := c.cc.Invoke(ctx, "/tickets.TicketsService/GetMyTickets", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tickets.TicketsService/GetUserTickets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ type TicketsServiceServer interface {
 	CreateTicket(context.Context, *CreateTicketIn) (*CreateTicketOut, error)
 	GetTicket(context.Context, *GetTicketIn) (*GetTicketOut, error)
 	GetTickets(context.Context, *GetTicketsIn) (*GetTicketsOut, error)
-	GetMyTickets(context.Context, *GetMyTicketsIn) (*GetTicketsOut, error)
+	GetUserTickets(context.Context, *GetUserTicketsIn) (*GetTicketsOut, error)
 	mustEmbedUnimplementedTicketsServiceServer()
 }
 
@@ -92,8 +92,8 @@ func (UnimplementedTicketsServiceServer) GetTicket(context.Context, *GetTicketIn
 func (UnimplementedTicketsServiceServer) GetTickets(context.Context, *GetTicketsIn) (*GetTicketsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTickets not implemented")
 }
-func (UnimplementedTicketsServiceServer) GetMyTickets(context.Context, *GetMyTicketsIn) (*GetTicketsOut, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMyTickets not implemented")
+func (UnimplementedTicketsServiceServer) GetUserTickets(context.Context, *GetUserTicketsIn) (*GetTicketsOut, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserTickets not implemented")
 }
 func (UnimplementedTicketsServiceServer) mustEmbedUnimplementedTicketsServiceServer() {}
 
@@ -162,20 +162,20 @@ func _TicketsService_GetTickets_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TicketsService_GetMyTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMyTicketsIn)
+func _TicketsService_GetUserTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserTicketsIn)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TicketsServiceServer).GetMyTickets(ctx, in)
+		return srv.(TicketsServiceServer).GetUserTickets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tickets.TicketsService/GetMyTickets",
+		FullMethod: "/tickets.TicketsService/GetUserTickets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TicketsServiceServer).GetMyTickets(ctx, req.(*GetMyTicketsIn))
+		return srv.(TicketsServiceServer).GetUserTickets(ctx, req.(*GetUserTicketsIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,8 +200,8 @@ var TicketsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TicketsService_GetTickets_Handler,
 		},
 		{
-			MethodName: "GetMyTickets",
-			Handler:    _TicketsService_GetMyTickets_Handler,
+			MethodName: "GetUserTickets",
+			Handler:    _TicketsService_GetUserTickets_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

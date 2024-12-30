@@ -21,7 +21,7 @@ type RespondsServiceClient interface {
 	RespondToTicket(ctx context.Context, in *RespondToTicketIn, opts ...grpc.CallOption) (*RespondToTicketOut, error)
 	GetRespond(ctx context.Context, in *GetRespondIn, opts ...grpc.CallOption) (*GetRespondOut, error)
 	GetTicketResponds(ctx context.Context, in *GetTicketRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error)
-	GetMyResponds(ctx context.Context, in *GetMyRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error)
+	GetUserResponds(ctx context.Context, in *GetUserRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error)
 }
 
 type respondsServiceClient struct {
@@ -59,9 +59,9 @@ func (c *respondsServiceClient) GetTicketResponds(ctx context.Context, in *GetTi
 	return out, nil
 }
 
-func (c *respondsServiceClient) GetMyResponds(ctx context.Context, in *GetMyRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error) {
+func (c *respondsServiceClient) GetUserResponds(ctx context.Context, in *GetUserRespondsIn, opts ...grpc.CallOption) (*GetRespondsOut, error) {
 	out := new(GetRespondsOut)
-	err := c.cc.Invoke(ctx, "/responds.RespondsService/GetMyResponds", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/responds.RespondsService/GetUserResponds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ type RespondsServiceServer interface {
 	RespondToTicket(context.Context, *RespondToTicketIn) (*RespondToTicketOut, error)
 	GetRespond(context.Context, *GetRespondIn) (*GetRespondOut, error)
 	GetTicketResponds(context.Context, *GetTicketRespondsIn) (*GetRespondsOut, error)
-	GetMyResponds(context.Context, *GetMyRespondsIn) (*GetRespondsOut, error)
+	GetUserResponds(context.Context, *GetUserRespondsIn) (*GetRespondsOut, error)
 	mustEmbedUnimplementedRespondsServiceServer()
 }
 
@@ -92,8 +92,8 @@ func (UnimplementedRespondsServiceServer) GetRespond(context.Context, *GetRespon
 func (UnimplementedRespondsServiceServer) GetTicketResponds(context.Context, *GetTicketRespondsIn) (*GetRespondsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTicketResponds not implemented")
 }
-func (UnimplementedRespondsServiceServer) GetMyResponds(context.Context, *GetMyRespondsIn) (*GetRespondsOut, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMyResponds not implemented")
+func (UnimplementedRespondsServiceServer) GetUserResponds(context.Context, *GetUserRespondsIn) (*GetRespondsOut, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserResponds not implemented")
 }
 func (UnimplementedRespondsServiceServer) mustEmbedUnimplementedRespondsServiceServer() {}
 
@@ -162,20 +162,20 @@ func _RespondsService_GetTicketResponds_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RespondsService_GetMyResponds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMyRespondsIn)
+func _RespondsService_GetUserResponds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRespondsIn)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RespondsServiceServer).GetMyResponds(ctx, in)
+		return srv.(RespondsServiceServer).GetUserResponds(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/responds.RespondsService/GetMyResponds",
+		FullMethod: "/responds.RespondsService/GetUserResponds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RespondsServiceServer).GetMyResponds(ctx, req.(*GetMyRespondsIn))
+		return srv.(RespondsServiceServer).GetUserResponds(ctx, req.(*GetUserRespondsIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,8 +200,8 @@ var RespondsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RespondsService_GetTicketResponds_Handler,
 		},
 		{
-			MethodName: "GetMyResponds",
-			Handler:    _RespondsService_GetMyResponds_Handler,
+			MethodName: "GetUserResponds",
+			Handler:    _RespondsService_GetUserResponds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -16,7 +16,6 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/security"
 )
 
 // RegisterServer handler (serverAPI) for TicketsServer to gRPC server:.
@@ -33,8 +32,8 @@ type ServerAPI struct {
 
 // CreateTicket handler creates new Ticket.
 func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicketIn) (*tickets.CreateTicketOut, error) {
-	ticketData := entities.RawCreateTicketDTO{
-		AccessToken: in.GetAccessToken(),
+	ticketData := entities.CreateTicketDTO{
+		UserID:      in.GetUserID(),
 		CategoryID:  in.GetCategoryID(),
 		Name:        in.GetName(),
 		Description: in.GetDescription(),
@@ -48,8 +47,6 @@ func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicket
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to create new Ticket", err)
 
 		switch {
-		case errors.As(err, &security.InvalidJWTError{}):
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
 		case errors.As(err, &customerrors.TicketAlreadyExistsError{}):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
@@ -120,27 +117,25 @@ func (api *ServerAPI) GetTickets(ctx context.Context, in *tickets.GetTicketsIn) 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil
 }
 
-// GetMyTickets handler returns Tickets for current User.
-func (api *ServerAPI) GetMyTickets(ctx context.Context, in *tickets.GetMyTicketsIn) (*tickets.GetTicketsOut, error) {
-	myTickets, err := api.useCases.GetMyTickets(ctx, in.GetAccessToken())
+// GetUserTickets handler returns Tickets for User with provided ID.
+func (api *ServerAPI) GetUserTickets(
+	ctx context.Context,
+	in *tickets.GetUserTicketsIn,
+) (*tickets.GetTicketsOut, error) {
+	userTickets, err := api.useCases.GetUserTickets(ctx, in.GetUserID())
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get Tickets for user with AccessToken=%s", in.GetAccessToken()),
+			fmt.Sprintf("Error occurred while trying to get Tickets for User with ID=%d", in.GetUserID()),
 			err,
 		)
 
-		switch {
-		case errors.As(err, &security.InvalidJWTError{}):
-			return nil, &customgrpc.BaseError{Status: codes.Unauthenticated, Message: err.Error()}
-		default:
-			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
-		}
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
-	processedTickets := make([]*tickets.GetTicketOut, len(myTickets))
-	for i, ticket := range myTickets {
+	processedTickets := make([]*tickets.GetTicketOut, len(userTickets))
+	for i, ticket := range userTickets {
 		processedTickets[i] = &tickets.GetTicketOut{
 			ID:          ticket.ID,
 			UserID:      ticket.UserID,

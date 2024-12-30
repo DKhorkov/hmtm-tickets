@@ -7,7 +7,6 @@ import (
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/loadenv"
 	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/security"
 )
 
 func New() Config {
@@ -15,12 +14,6 @@ func New() Config {
 		HTTP: HTTPConfig{
 			Host: loadenv.GetEnv("HOST", "0.0.0.0"),
 			Port: loadenv.GetEnvAsInt("PORT", 8050),
-		},
-		Security: security.Config{
-			JWT: security.JWTConfig{
-				Algorithm: loadenv.GetEnv("JWT_ALGORITHM", "HS256"),
-				SecretKey: loadenv.GetEnv("JWT_SECRET", "defaultSecret"),
-			},
 		},
 		Database: db.Config{
 			Host:         loadenv.GetEnv("POSTGRES_HOST", "0.0.0.0"),
@@ -35,7 +28,28 @@ func New() Config {
 			Level:       logging.Levels.DEBUG,
 			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
 		},
+		Clients: ClientsConfig{
+			Toys: ClientConfig{
+				Host:         loadenv.GetEnv("TOYS_CLIENT_HOST", "0.0.0.0"),
+				Port:         loadenv.GetEnvAsInt("TOYS_CLIENT_PORT", 8060),
+				RetriesCount: loadenv.GetEnvAsInt("TOYS_RETRIES_COUNT", 3),
+				RetryTimeout: time.Second * time.Duration(
+					loadenv.GetEnvAsInt("TOYS_RETRIES_TIMEOUT", 1),
+				),
+			},
+		},
 	}
+}
+
+type ClientConfig struct {
+	Host         string
+	Port         int
+	RetryTimeout time.Duration
+	RetriesCount int
+}
+
+type ClientsConfig struct {
+	Toys ClientConfig
 }
 
 type HTTPConfig struct {
@@ -45,7 +59,7 @@ type HTTPConfig struct {
 
 type Config struct {
 	HTTP     HTTPConfig
-	Security security.Config
 	Database db.Config
 	Logging  logging.Config
+	Clients  ClientsConfig
 }

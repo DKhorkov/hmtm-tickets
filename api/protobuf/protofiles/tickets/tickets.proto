@@ -11,12 +11,12 @@ service TicketsService {
   rpc CreateTicket(CreateTicketIn) returns (CreateTicketOut) {}
   rpc GetTicket(GetTicketIn) returns (GetTicketOut) {}
   rpc GetTickets(GetTicketsIn) returns (GetTicketsOut) {}
-  rpc GetMyTickets(GetMyTicketsIn) returns (GetTicketsOut) {}
+  rpc GetUserTickets(GetUserTicketsIn) returns (GetTicketsOut) {}
 }
 
 message CreateTicketIn {
   string requestID = 1;
-  string accessToken = 2;
+  uint64 userID = 2;
   string name = 3;
   string description = 4;
   float price = 5;
@@ -55,7 +55,7 @@ message GetTicketsOut {
   repeated GetTicketOut tickets = 1;
 }
 
-message GetMyTicketsIn {
+message GetUserTicketsIn {
   string requestID = 1;
-  string accessToken = 2;
+  uint64 userID = 2;
 }
