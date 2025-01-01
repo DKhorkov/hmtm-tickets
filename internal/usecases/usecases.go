@@ -3,6 +3,8 @@ package usecases
 import (
 	"context"
 
+	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
+
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
@@ -42,6 +44,15 @@ func (useCases *CommonUseCases) RespondToTicket(
 	ctx context.Context,
 	respondData entities.RawRespondToTicketDTO,
 ) (uint64, error) {
+	ticket, err := useCases.ticketsService.GetTicketByID(ctx, respondData.TicketID)
+	if err != nil {
+		return 0, err
+	}
+
+	if ticket.UserID == respondData.UserID {
+		return 0, &customerrors.RespondToOwnTicketError{}
+	}
+
 	return useCases.respondsService.RespondToTicket(ctx, respondData)
 }
 

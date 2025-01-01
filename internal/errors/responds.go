@@ -37,3 +37,21 @@ func (e RespondAlreadyExistsError) Error() string {
 
 	return template
 }
+
+type RespondToOwnTicketError struct {
+	Message string
+	BaseErr error
+}
+
+func (e RespondToOwnTicketError) Error() string {
+	template := "respond to own Ticket is not allowed"
+	if e.Message != "" {
+		template = e.Message
+	}
+
+	if e.BaseErr != nil {
+		return fmt.Sprintf(template+". Base error: %v", e.BaseErr)
+	}
+
+	return template
+}

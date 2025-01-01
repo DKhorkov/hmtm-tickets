@@ -40,7 +40,7 @@ var (
 		Description: "test description",
 		Quantity:    1,
 		Price:       1,
-		TagsIDs:     []uint32{tagID},
+		TagIDs:      []uint32{tagID},
 	}
 )
 
@@ -71,7 +71,7 @@ func TestCommonTicketsService_CreateTicket(t *testing.T) {
 		},
 		{
 			name:            "fail to create ticket due to tag not found",
-			createTicketDTO: entities.CreateTicketDTO{CategoryID: categoryID, TagsIDs: []uint32{2}},
+			createTicketDTO: entities.CreateTicketDTO{CategoryID: categoryID, TagIDs: []uint32{2}},
 			errorExpected:   true,
 			err:             &customerrors.TagNotFoundError{},
 		},

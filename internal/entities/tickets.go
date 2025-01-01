@@ -22,5 +22,5 @@ type CreateTicketDTO struct {
 	Description string   `json:"description"`
 	Price       float32  `json:"price"`
 	Quantity    uint32   `json:"quantity"`
-	TagsIDs     []uint32 `json:"tag_ids"`
+	TagIDs      []uint32 `json:"tag_ids"`
 }

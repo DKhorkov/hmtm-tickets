@@ -62,29 +62,31 @@ func (repo *CommonTicketsRepository) CreateTicket(
 		return 0, err
 	}
 
-	// Bulk insert of Ticket's Tags.
-	ticketTagsInsertPlaceholders := make([]string, 0, len(ticketData.TagsIDs))
-	ticketTagsInsertValues := make([]interface{}, 0, len(ticketData.TagsIDs))
-	for index, tagID := range ticketData.TagsIDs {
-		ticketTagsInsertPlaceholder := fmt.Sprintf("($%d,$%d)",
-			index*2+1, // (*2) - where 2 is number of inserted params.
-			index*2+2,
-		)
+	if len(ticketData.TagIDs) > 0 {
+		// Bulk insert of Ticket's Tags.
+		ticketTagsInsertPlaceholders := make([]string, 0, len(ticketData.TagIDs))
+		ticketTagsInsertValues := make([]interface{}, 0, len(ticketData.TagIDs))
+		for index, tagID := range ticketData.TagIDs {
+			ticketTagsInsertPlaceholder := fmt.Sprintf("($%d,$%d)",
+				index*2+1, // (*2) - where 2 is number of inserted params.
+				index*2+2,
+			)
 
-		ticketTagsInsertPlaceholders = append(ticketTagsInsertPlaceholders, ticketTagsInsertPlaceholder)
-		ticketTagsInsertValues = append(ticketTagsInsertValues, ticketID, tagID)
-	}
+			ticketTagsInsertPlaceholders = append(ticketTagsInsertPlaceholders, ticketTagsInsertPlaceholder)
+			ticketTagsInsertValues = append(ticketTagsInsertValues, ticketID, tagID)
+		}
 
-	_, err = transaction.Exec(
-		`
+		_, err = transaction.Exec(
+			`
 			INSERT INTO ticket_tags_associations (ticket_id, tag_id)
 			VALUES 
 		`+strings.Join(ticketTagsInsertPlaceholders, ","),
-		ticketTagsInsertValues...,
-	)
+			ticketTagsInsertValues...,
+		)
 
-	if err != nil {
-		return 0, err
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	err = transaction.Commit()

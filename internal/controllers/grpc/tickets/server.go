@@ -39,7 +39,7 @@ func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicket
 		Description: in.GetDescription(),
 		Price:       in.GetPrice(),
 		Quantity:    in.GetQuantity(),
-		TagsIDs:     in.GetTagIDs(),
+		TagIDs:      in.GetTagIDs(),
 	}
 
 	ticketID, err := api.useCases.CreateTicket(ctx, ticketData)

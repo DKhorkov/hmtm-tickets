@@ -38,7 +38,7 @@ func (service *CommonTicketsService) CreateTicket(
 		return 0, err
 	}
 
-	if err := service.processTicketTags(ctx, ticketData.TagsIDs); err != nil {
+	if err := service.processTicketTags(ctx, ticketData.TagIDs); err != nil {
 		return 0, err
 	}
 
