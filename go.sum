@@ -1,7 +1,7 @@
 github.com/DKhorkov/hmtm-toys v0.0.7 h1:SZqdCfwZJqeO5UbVrE0fQ8II8C96FPqGyxF/mOlLzrU=
 github.com/DKhorkov/hmtm-toys v0.0.7/go.mod h1:jb1fvb19o/wAB/DLswWIhnhyRglXpoVN+4JK1vOgzCw=
-github.com/DKhorkov/libs v1.1.8 h1:uX8wTInO/Tdl4bcslq32ge6dWaarzZtWzSr6jVi4UUY=
-github.com/DKhorkov/libs v1.1.8/go.mod h1:y9udaaMQRMro+kHggF3nB4TOc0RB5r7JDtGUNsWrNkI=
+github.com/DKhorkov/libs v1.1.9 h1:/tC8tkBphV90NTjIVVNXKc2YbqJRo3ac2gqgYCqkvZA=
+github.com/DKhorkov/libs v1.1.9/go.mod h1:y9udaaMQRMro+kHggF3nB4TOc0RB5r7JDtGUNsWrNkI=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-logr/logr v1.4.2 h1:6pFjapn8bFcIbiKo3XT4j/BhANplGihG6tvd+8rYgrY=

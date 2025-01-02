@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/DKhorkov/hmtm-toys v0.0.7
-	github.com/DKhorkov/libs v1.1.8
+	github.com/DKhorkov/libs v1.1.9
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0

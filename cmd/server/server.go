@@ -23,6 +23,10 @@ func main() {
 		db.BuildDsn(settings.Database),
 		settings.Database.Driver,
 		logger,
+		db.WithMaxOpenConnections(settings.Database.Pool.MaxOpenConnections),
+		db.WithMaxIdleConnections(settings.Database.Pool.MaxIdleConnections),
+		db.WithMaxConnectionLifetime(settings.Database.Pool.MaxConnectionLifetime),
+		db.WithMaxConnectionIdleTime(settings.Database.Pool.MaxConnectionIdleTime),
 	)
 
 	if err != nil {

@@ -6,7 +6,7 @@ WORKDIR /build
 
 COPY . .
 
-RUN go build -o hmtmtickets ./cmd/hmtmtickets/main.go
+RUN go build -o server ./cmd/server/server.go
 
 FROM alpine AS runner
 
@@ -14,6 +14,6 @@ WORKDIR /app
 
 COPY .env .
 COPY --from=builder /build/migrations/ /app/migrations/
-COPY --from=builder /build/hmtmtickets /app/hmtmtickets
+COPY --from=builder /build/server /app/server
 
-CMD ["./hmtmtickets"]
+CMD ["./server"]

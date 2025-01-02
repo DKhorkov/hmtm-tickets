@@ -28,7 +28,6 @@ go.work.sum
 # Local files^
 *.log
 logs/
-cmd/client/
 *.db
 bench.txt
 
