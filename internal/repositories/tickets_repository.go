@@ -78,9 +78,9 @@ func (repo *CommonTicketsRepository) CreateTicket(
 
 		_, err = transaction.Exec(
 			`
-			INSERT INTO ticket_tags_associations (ticket_id, tag_id)
-			VALUES 
-		`+strings.Join(ticketTagsInsertPlaceholders, ","),
+				INSERT INTO ticket_tags_associations (ticket_id, tag_id)
+				VALUES 
+			`+strings.Join(ticketTagsInsertPlaceholders, ","),
 			ticketTagsInsertValues...,
 		)
 
