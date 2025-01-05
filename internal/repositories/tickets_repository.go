@@ -78,10 +78,41 @@ func (repo *CommonTicketsRepository) CreateTicket(
 
 		_, err = transaction.Exec(
 			`
-				INSERT INTO ticket_tags_associations (ticket_id, tag_id)
+				INSERT INTO tickets_tags_associations (ticket_id, tag_id)
 				VALUES 
 			`+strings.Join(ticketTagsInsertPlaceholders, ","),
 			ticketTagsInsertValues...,
+		)
+
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	if len(ticketData.Attachments) > 0 {
+		// Bulk insert of Ticket's Attachments.
+		ticketAttachmentsInsertPlaceholders := make([]string, 0, len(ticketData.Attachments))
+		ticketAttachmentsInsertValues := make([]interface{}, 0, len(ticketData.Attachments))
+		for index, attachment := range ticketData.Attachments {
+			ticketAttachmentsInsertPlaceholder := fmt.Sprintf("($%d,$%d)",
+				index*2+1, // (*2) - where 2 is number of inserted params.
+				index*2+2,
+			)
+
+			ticketAttachmentsInsertPlaceholders = append(
+				ticketAttachmentsInsertPlaceholders,
+				ticketAttachmentsInsertPlaceholder,
+			)
+
+			ticketAttachmentsInsertValues = append(ticketAttachmentsInsertValues, ticketID, attachment)
+		}
+
+		_, err = transaction.Exec(
+			`
+				INSERT INTO tickets_attachments_associations (ticket_id, link)
+				VALUES 
+			`+strings.Join(ticketAttachmentsInsertPlaceholders, ","),
+			ticketAttachmentsInsertValues...,
 		)
 
 		if err != nil {
@@ -107,7 +138,7 @@ func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint6
 
 	ticket := &entities.Ticket{}
 	columns := db.GetEntityColumns(ticket)
-	columns = columns[:len(columns)-1] // not to paste TagIDs field ([]uint32) to Scan function.
+	columns = columns[:len(columns)-2] // Not to paste TagIDs and Attachments fields to Scan function.
 	err = connection.QueryRowContext(
 		ctx,
 		`
@@ -126,6 +157,10 @@ func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint6
 		return nil, err
 	}
 
+	if err = repo.processTicketAttachments(ctx, ticket, connection); err != nil {
+		return nil, err
+	}
+
 	return ticket, nil
 }
 
@@ -138,7 +173,7 @@ func (repo *CommonTicketsRepository) processTicketTags(
 		ctx,
 		`
 			SELECT tta.tag_id
-			FROM ticket_tags_associations AS tta
+			FROM tickets_tags_associations AS tta
 			WHERE tta.ticket_id = $1
 		`,
 		ticket.ID,
@@ -178,6 +213,56 @@ func (repo *CommonTicketsRepository) processTicketTags(
 	return nil
 }
 
+func (repo *CommonTicketsRepository) processTicketAttachments(
+	ctx context.Context,
+	ticket *entities.Ticket,
+	connection *sql.Conn,
+) error {
+	rows, err := connection.QueryContext(
+		ctx,
+		`
+			SELECT *
+			FROM tickets_attachments_associations AS taa
+			WHERE taa.ticket_id = $1
+		`,
+		ticket.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				repo.logger,
+				"error during closing SQL rows",
+				err,
+			)
+		}
+	}()
+
+	var attachments []entities.Attachment
+	for rows.Next() {
+		var attachment entities.Attachment
+		columns := db.GetEntityColumns(&attachment) // Only pointer to use rows.Scan() successfully
+		err = rows.Scan(columns...)
+		if err != nil {
+			return err
+		}
+
+		attachments = append(attachments, attachment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return err
+	}
+
+	ticket.Attachments = attachments
+	return nil
+}
+
 func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -213,7 +298,7 @@ func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entit
 	for rows.Next() {
 		ticket := entities.Ticket{}
 		columns := db.GetEntityColumns(&ticket) // Only pointer to use rows.Scan() successfully
-		columns = columns[:len(columns)-1]      // not to paste TagIDs field ([]uint32) to Scan function.
+		columns = columns[:len(columns)-2]      // Not to paste TagIDs and Attachments fields to Scan function.
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
@@ -226,10 +311,15 @@ func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entit
 		return nil, err
 	}
 
-	// Reading Tags for each Ticket in new circle due to next error: https://github.com/lib/pq/issues/635
+	// Reading Tags and Attachments for each Ticket in new circle due
+	// to next error: https://github.com/lib/pq/issues/635
 	// Using ticketIndex to avoid range iter semantics error, via using copied variable.
 	for ticketIndex := range tickets {
 		if err = repo.processTicketTags(ctx, &tickets[ticketIndex], connection); err != nil {
+			return nil, err
+		}
+
+		if err = repo.processTicketAttachments(ctx, &tickets[ticketIndex], connection); err != nil {
 			return nil, err
 		}
 	}
@@ -274,7 +364,7 @@ func (repo *CommonTicketsRepository) GetUserTickets(ctx context.Context, userID 
 	for rows.Next() {
 		ticket := entities.Ticket{}
 		columns := db.GetEntityColumns(&ticket) // Only pointer to use rows.Scan() successfully
-		columns = columns[:len(columns)-1]      // not to paste TagIDs field ([]uint32) to Scan function.
+		columns = columns[:len(columns)-2]      // Not to paste TagIDs and Attachments fields to Scan function.
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
@@ -287,10 +377,15 @@ func (repo *CommonTicketsRepository) GetUserTickets(ctx context.Context, userID 
 		return nil, err
 	}
 
-	// Reading Tags for each Ticket in new circle due to next error: https://github.com/lib/pq/issues/635
+	// Reading Tags and Attachments for each Ticket in new circle due
+	// to next error: https://github.com/lib/pq/issues/635
 	// Using ticketIndex to avoid range iter semantics error, via using copied variable.
 	for ticketIndex := range tickets {
 		if err = repo.processTicketTags(ctx, &tickets[ticketIndex], connection); err != nil {
+			return nil, err
+		}
+
+		if err = repo.processTicketAttachments(ctx, &tickets[ticketIndex], connection); err != nil {
 			return nil, err
 		}
 	}

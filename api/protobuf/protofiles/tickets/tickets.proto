@@ -23,6 +23,7 @@ message CreateTicketIn {
   uint32 quantity = 6;
   uint32 categoryID = 7;
   repeated uint32 tagIDs = 8;
+  repeated string attachments = 9;
 }
 
 message CreateTicketOut {
@@ -34,6 +35,14 @@ message GetTicketIn {
   uint64 ID = 2;
 }
 
+message Attachment {
+  uint64 ID = 1;
+  uint64 ticketID = 2;
+  string link = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+}
+
 message GetTicketOut {
   uint64 ID = 1;
   uint64 userID = 2;
@@ -43,8 +52,9 @@ message GetTicketOut {
   uint32 quantity = 6;
   uint32 categoryID = 7;
   repeated uint32 tagIDs = 8;
-  google.protobuf.Timestamp createdAt = 9;
-  google.protobuf.Timestamp updatedAt = 10;
+  repeated Attachment attachments = 9;
+  google.protobuf.Timestamp createdAt = 10;
+  google.protobuf.Timestamp updatedAt = 11;
 }
 
 message GetTicketsIn {

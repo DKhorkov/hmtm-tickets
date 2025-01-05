@@ -6,16 +6,14 @@ import (
 	"fmt"
 	"log/slog"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/types/known/timestamppb"
-
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 // RegisterServer handler (serverAPI) for TicketsServer to gRPC server:.
@@ -40,6 +38,7 @@ func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicket
 		Price:       in.GetPrice(),
 		Quantity:    in.GetQuantity(),
 		TagIDs:      in.GetTagIDs(),
+		Attachments: in.GetAttachments(),
 	}
 
 	ticketID, err := api.useCases.CreateTicket(ctx, ticketData)
@@ -76,18 +75,7 @@ func (api *ServerAPI) GetTicket(ctx context.Context, in *tickets.GetTicketIn) (*
 		}
 	}
 
-	return &tickets.GetTicketOut{
-		ID:          ticket.ID,
-		UserID:      ticket.UserID,
-		Name:        ticket.Name,
-		Description: ticket.Description,
-		Price:       ticket.Price,
-		Quantity:    ticket.Quantity,
-		CategoryID:  ticket.CategoryID,
-		TagIDs:      ticket.TagIDs,
-		CreatedAt:   timestamppb.New(ticket.CreatedAt),
-		UpdatedAt:   timestamppb.New(ticket.UpdatedAt),
-	}, nil
+	return prepareTicketOut(ticket), nil
 }
 
 // GetTickets handler returns all Tickets.
@@ -99,19 +87,8 @@ func (api *ServerAPI) GetTickets(ctx context.Context, in *tickets.GetTicketsIn) 
 	}
 
 	processedTickets := make([]*tickets.GetTicketOut, len(allTickets))
-	for i, ticket := range allTickets {
-		processedTickets[i] = &tickets.GetTicketOut{
-			ID:          ticket.ID,
-			UserID:      ticket.UserID,
-			Name:        ticket.Name,
-			Description: ticket.Description,
-			Price:       ticket.Price,
-			Quantity:    ticket.Quantity,
-			CategoryID:  ticket.CategoryID,
-			TagIDs:      ticket.TagIDs,
-			CreatedAt:   timestamppb.New(ticket.CreatedAt),
-			UpdatedAt:   timestamppb.New(ticket.UpdatedAt),
-		}
+	for ticketIndex := range allTickets {
+		processedTickets[ticketIndex] = prepareTicketOut(&allTickets[ticketIndex])
 	}
 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil
@@ -135,19 +112,8 @@ func (api *ServerAPI) GetUserTickets(
 	}
 
 	processedTickets := make([]*tickets.GetTicketOut, len(userTickets))
-	for i, ticket := range userTickets {
-		processedTickets[i] = &tickets.GetTicketOut{
-			ID:          ticket.ID,
-			UserID:      ticket.UserID,
-			Name:        ticket.Name,
-			Description: ticket.Description,
-			Price:       ticket.Price,
-			Quantity:    ticket.Quantity,
-			CategoryID:  ticket.CategoryID,
-			TagIDs:      ticket.TagIDs,
-			CreatedAt:   timestamppb.New(ticket.CreatedAt),
-			UpdatedAt:   timestamppb.New(ticket.UpdatedAt),
-		}
+	for ticketIndex := range userTickets {
+		processedTickets[ticketIndex] = prepareTicketOut(&userTickets[ticketIndex])
 	}
 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil
