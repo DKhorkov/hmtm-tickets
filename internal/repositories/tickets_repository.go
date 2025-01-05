@@ -109,7 +109,7 @@ func (repo *CommonTicketsRepository) CreateTicket(
 
 		_, err = transaction.Exec(
 			`
-				INSERT INTO tickets_attachments_associations (ticket_id, link)
+				INSERT INTO tickets_attachments (ticket_id, link)
 				VALUES 
 			`+strings.Join(ticketAttachmentsInsertPlaceholders, ","),
 			ticketAttachmentsInsertValues...,
@@ -222,8 +222,8 @@ func (repo *CommonTicketsRepository) processTicketAttachments(
 		ctx,
 		`
 			SELECT *
-			FROM tickets_attachments_associations AS taa
-			WHERE taa.ticket_id = $1
+			FROM tickets_attachments AS ta
+			WHERE ta.ticket_id = $1
 		`,
 		ticket.ID,
 	)

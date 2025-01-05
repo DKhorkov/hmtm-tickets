@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS tickets_tags_associations
     FOREIGN KEY (ticket_id) REFERENCES tickets (id)
 );
 
-CREATE TABLE IF NOT EXISTS tickets_attachments_associations
+CREATE TABLE IF NOT EXISTS tickets_attachments
 (
     id         SERIAL PRIMARY KEY,
     ticket_id  INTEGER   NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS responds
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS tickets_tags_associations;
-DROP TABLE IF EXISTS tickets_attachments_associations;
+DROP TABLE IF EXISTS tickets_attachments;
 DROP TABLE IF EXISTS responds;
 DROP TABLE IF EXISTS tickets;
 -- +goose StatementEnd
