@@ -5,12 +5,13 @@ import (
 	"log/slog"
 	"net"
 
+	"google.golang.org/grpc"
+
 	"github.com/DKhorkov/hmtm-tickets/internal/controllers/grpc/responds"
 	"github.com/DKhorkov/hmtm-tickets/internal/controllers/grpc/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
-	"google.golang.org/grpc"
 )
 
 // New creates an instance of gRPC Controller.

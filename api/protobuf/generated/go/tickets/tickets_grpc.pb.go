@@ -7,6 +7,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TicketsServiceClient interface {
 	CreateTicket(ctx context.Context, in *CreateTicketIn, opts ...grpc.CallOption) (*CreateTicketOut, error)
 	GetTicket(ctx context.Context, in *GetTicketIn, opts ...grpc.CallOption) (*GetTicketOut, error)
-	GetTickets(ctx context.Context, in *GetTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
+	GetTickets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetTicketsOut, error)
 	GetUserTickets(ctx context.Context, in *GetUserTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
 }
 
@@ -50,7 +51,7 @@ func (c *ticketsServiceClient) GetTicket(ctx context.Context, in *GetTicketIn, o
 	return out, nil
 }
 
-func (c *ticketsServiceClient) GetTickets(ctx context.Context, in *GetTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error) {
+func (c *ticketsServiceClient) GetTickets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetTicketsOut, error) {
 	out := new(GetTicketsOut)
 	err := c.cc.Invoke(ctx, "/tickets.TicketsService/GetTickets", in, out, opts...)
 	if err != nil {
@@ -74,7 +75,7 @@ func (c *ticketsServiceClient) GetUserTickets(ctx context.Context, in *GetUserTi
 type TicketsServiceServer interface {
 	CreateTicket(context.Context, *CreateTicketIn) (*CreateTicketOut, error)
 	GetTicket(context.Context, *GetTicketIn) (*GetTicketOut, error)
-	GetTickets(context.Context, *GetTicketsIn) (*GetTicketsOut, error)
+	GetTickets(context.Context, *emptypb.Empty) (*GetTicketsOut, error)
 	GetUserTickets(context.Context, *GetUserTicketsIn) (*GetTicketsOut, error)
 	mustEmbedUnimplementedTicketsServiceServer()
 }
@@ -89,7 +90,7 @@ func (UnimplementedTicketsServiceServer) CreateTicket(context.Context, *CreateTi
 func (UnimplementedTicketsServiceServer) GetTicket(context.Context, *GetTicketIn) (*GetTicketOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTicket not implemented")
 }
-func (UnimplementedTicketsServiceServer) GetTickets(context.Context, *GetTicketsIn) (*GetTicketsOut, error) {
+func (UnimplementedTicketsServiceServer) GetTickets(context.Context, *emptypb.Empty) (*GetTicketsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTickets not implemented")
 }
 func (UnimplementedTicketsServiceServer) GetUserTickets(context.Context, *GetUserTicketsIn) (*GetTicketsOut, error) {
@@ -145,7 +146,7 @@ func _TicketsService_GetTicket_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _TicketsService_GetTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTicketsIn)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func _TicketsService_GetTickets_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/tickets.TicketsService/GetTickets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TicketsServiceServer).GetTickets(ctx, req.(*GetTicketsIn))
+		return srv.(TicketsServiceServer).GetTickets(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

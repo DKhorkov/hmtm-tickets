@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"log/slog"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 )
 
 // RegisterServer handler (serverAPI) for TicketsServer to gRPC server:.
@@ -79,7 +81,7 @@ func (api *ServerAPI) GetTicket(ctx context.Context, in *tickets.GetTicketIn) (*
 }
 
 // GetTickets handler returns all Tickets.
-func (api *ServerAPI) GetTickets(ctx context.Context, in *tickets.GetTicketsIn) (*tickets.GetTicketsOut, error) {
+func (api *ServerAPI) GetTickets(ctx context.Context, in *emptypb.Empty) (*tickets.GetTicketsOut, error) {
 	allTickets, err := api.useCases.GetAllTickets(ctx)
 	if err != nil {
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Tickets", err)
