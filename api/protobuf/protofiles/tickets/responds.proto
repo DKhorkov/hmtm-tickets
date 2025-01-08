@@ -15,9 +15,8 @@ service RespondsService {
 }
 
 message RespondToTicketIn {
-  string requestID = 1;
-  uint64 userID = 2;
-  uint64 ticketID = 3;
+  uint64 userID = 1;
+  uint64 ticketID = 2;
 }
 
 message RespondToTicketOut {
@@ -25,9 +24,8 @@ message RespondToTicketOut {
 }
 
 message GetRespondIn {
-  string requestID = 1;
-  uint64 userID = 2;
-  uint64 ID = 3;
+  uint64 userID = 1;
+  uint64 ID = 2;
 }
 
 message GetRespondOut {
@@ -39,9 +37,8 @@ message GetRespondOut {
 }
 
 message GetTicketRespondsIn {
-  string requestID = 1;
-  uint64 userID = 2;
-  uint64 ticketID = 3;
+  uint64 userID = 1;
+  uint64 ticketID = 2;
 }
 
 message GetRespondsOut {
@@ -49,6 +46,5 @@ message GetRespondsOut {
 }
 
 message GetUserRespondsIn {
-  string requestID = 1;
-  uint64 userID = 2;
+  uint64 userID = 1;
 }
