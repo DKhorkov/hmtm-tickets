@@ -3,15 +3,18 @@
 ### Run via docker:
 
 To run app and it's dependencies in docker, use next command:
-
 ```bash
-task -d scripts docker_prod -v
+task -d scripts prod -v
 ```
 
 ### Run via source files:
 
 To run application via source files, use next commands:
-
+1) Run all application dependencies:
+```shell
+task -d scripts local -v
+```
+2) Run application:
 ```shell
 go run ./cmd/server/server.go
 ```
