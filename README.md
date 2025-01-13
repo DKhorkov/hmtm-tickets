@@ -1,5 +1,10 @@
 ## Usage
 
+Before usage need to create network for correct dependencies work:
+```shell
+task -d scripts network -v
+```
+
 ### Run via docker:
 
 To run app and it's dependencies in docker, use next command:

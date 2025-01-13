@@ -13,6 +13,8 @@ services:
       - hmtm_tickets_database
     volumes:
       - ../../../logs/:/app/logs/
+    networks:
+      - hmtm_network
 
   hmtm_tickets_database:
     container_name: hmtm_tickets_database
@@ -27,3 +29,8 @@ services:
       - ../../../scripts/postgres:/scripts
     ports:
       - "${HMTM_TICKETS_DB_OUTER_PORT}:${HMTM_TICKETS_DB_INNER_PORT}"
+    networks:
+      - hmtm_network
+
+networks:
+  hmtm_network:
