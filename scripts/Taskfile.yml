@@ -1,6 +1,12 @@
 version: '3'
 
 tasks:
+  docker_network:
+    desc: "Create docker network for project."
+    aliases:
+      - network
+    cmd: sudo docker network create hmtm_network
+
   prod:
     desc: "Run application and it's dependencies for production."
     cmds:
@@ -250,6 +256,6 @@ tasks:
     dir: ../
     cmds:
       - task: prepare_env_file_prod
-      - task: docker_build
+      - task: docker_build_prod
       - sudo docker tag hmtm_tickets d3m0s/hmtm_tickets
       - sudo docker push d3m0s/hmtm_tickets

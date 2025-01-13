@@ -14,3 +14,8 @@ services:
       - ../../../scripts/postgres:/scripts
     ports:
       - "${HMTM_TICKETS_DB_OUTER_PORT}:${HMTM_TICKETS_DB_INNER_PORT}"
+    networks:
+      - hmtm_network
+
+networks:
+  hmtm_network:
