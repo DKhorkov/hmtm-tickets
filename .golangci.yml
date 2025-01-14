@@ -370,6 +370,7 @@ issues:
       linters:
         - mnd
         - gosec
+        - govet
     - path: "internal/services/responds_service_test.go"
       linters:
         - gochecknoglobals

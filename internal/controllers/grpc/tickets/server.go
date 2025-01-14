@@ -77,7 +77,7 @@ func (api *ServerAPI) GetTicket(ctx context.Context, in *tickets.GetTicketIn) (*
 		}
 	}
 
-	return prepareTicketOut(ticket), nil
+	return prepareTicketOut(*ticket), nil
 }
 
 // GetTickets handler returns all Tickets.
@@ -89,8 +89,8 @@ func (api *ServerAPI) GetTickets(ctx context.Context, in *emptypb.Empty) (*ticke
 	}
 
 	processedTickets := make([]*tickets.GetTicketOut, len(allTickets))
-	for ticketIndex := range allTickets {
-		processedTickets[ticketIndex] = prepareTicketOut(&allTickets[ticketIndex])
+	for i, ticket := range allTickets {
+		processedTickets[i] = prepareTicketOut(ticket)
 	}
 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil
@@ -114,8 +114,8 @@ func (api *ServerAPI) GetUserTickets(
 	}
 
 	processedTickets := make([]*tickets.GetTicketOut, len(userTickets))
-	for ticketIndex := range userTickets {
-		processedTickets[ticketIndex] = prepareTicketOut(&userTickets[ticketIndex])
+	for i, ticket := range userTickets {
+		processedTickets[i] = prepareTicketOut(ticket)
 	}
 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil

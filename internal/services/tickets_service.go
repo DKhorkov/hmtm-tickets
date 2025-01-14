@@ -34,11 +34,11 @@ func (service *CommonTicketsService) CreateTicket(
 	ctx context.Context,
 	ticketData entities.CreateTicketDTO,
 ) (uint64, error) {
-	if err := service.processTicketCategory(ctx, ticketData.CategoryID); err != nil {
+	if err := service.validateCategory(ctx, ticketData.CategoryID); err != nil {
 		return 0, err
 	}
 
-	if err := service.processTicketTags(ctx, ticketData.TagIDs); err != nil {
+	if err := service.validateTags(ctx, ticketData.TagIDs); err != nil {
 		return 0, err
 	}
 
@@ -49,7 +49,7 @@ func (service *CommonTicketsService) CreateTicket(
 	return service.ticketsRepository.CreateTicket(ctx, ticketData)
 }
 
-func (service *CommonTicketsService) processTicketCategory(ctx context.Context, categoryID uint32) error {
+func (service *CommonTicketsService) validateCategory(ctx context.Context, categoryID uint32) error {
 	categories, err := service.toysRepository.GetAllCategories(ctx)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (service *CommonTicketsService) processTicketCategory(ctx context.Context, 
 	return &customerrors.CategoryNotFoundError{Message: strconv.FormatUint(uint64(categoryID), 10)}
 }
 
-func (service *CommonTicketsService) processTicketTags(ctx context.Context, tagIDs []uint32) error {
+func (service *CommonTicketsService) validateTags(ctx context.Context, tagIDs []uint32) error {
 	tags, err := service.toysRepository.GetAllTags(ctx)
 	if err != nil {
 		return err
