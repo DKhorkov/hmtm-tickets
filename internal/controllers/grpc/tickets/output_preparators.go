@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func prepareTicketOut(ticket *entities.Ticket) *tickets.GetTicketOut {
+func prepareTicketOut(ticket entities.Ticket) *tickets.GetTicketOut {
 	attachments := make([]*tickets.Attachment, len(ticket.Attachments))
 	for j, attachment := range ticket.Attachments {
 		attachments[j] = &tickets.Attachment{

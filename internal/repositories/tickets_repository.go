@@ -153,22 +153,27 @@ func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint6
 		return nil, err
 	}
 
-	if err = repo.processTicketTags(ctx, ticket, connection); err != nil {
+	tagsIDs, err := repo.getTicketTagsIDs(ctx, ticket.ID, connection)
+	if err != nil {
 		return nil, err
 	}
 
-	if err = repo.processTicketAttachments(ctx, ticket, connection); err != nil {
+	ticket.TagIDs = tagsIDs
+
+	attachments, err := repo.getTicketAttachments(ctx, ticket.ID, connection)
+	if err != nil {
 		return nil, err
 	}
 
+	ticket.Attachments = attachments
 	return ticket, nil
 }
 
-func (repo *CommonTicketsRepository) processTicketTags(
+func (repo *CommonTicketsRepository) getTicketTagsIDs(
 	ctx context.Context,
-	ticket *entities.Ticket,
+	ticketID uint64,
 	connection *sql.Conn,
-) error {
+) ([]uint32, error) {
 	rows, err := connection.QueryContext(
 		ctx,
 		`
@@ -176,11 +181,11 @@ func (repo *CommonTicketsRepository) processTicketTags(
 			FROM tickets_tags_associations AS tta
 			WHERE tta.ticket_id = $1
 		`,
-		ticket.ID,
+		ticketID,
 	)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -199,25 +204,24 @@ func (repo *CommonTicketsRepository) processTicketTags(
 		var tagID uint32
 		err = rows.Scan(&tagID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		tagIDs = append(tagIDs, tagID)
 	}
 
 	if err = rows.Err(); err != nil {
-		return err
+		return nil, err
 	}
 
-	ticket.TagIDs = tagIDs
-	return nil
+	return tagIDs, err
 }
 
-func (repo *CommonTicketsRepository) processTicketAttachments(
+func (repo *CommonTicketsRepository) getTicketAttachments(
 	ctx context.Context,
-	ticket *entities.Ticket,
+	ticketID uint64,
 	connection *sql.Conn,
-) error {
+) ([]entities.Attachment, error) {
 	rows, err := connection.QueryContext(
 		ctx,
 		`
@@ -225,11 +229,11 @@ func (repo *CommonTicketsRepository) processTicketAttachments(
 			FROM tickets_attachments AS ta
 			WHERE ta.ticket_id = $1
 		`,
-		ticket.ID,
+		ticketID,
 	)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -249,18 +253,17 @@ func (repo *CommonTicketsRepository) processTicketAttachments(
 		columns := db.GetEntityColumns(&attachment) // Only pointer to use rows.Scan() successfully
 		err = rows.Scan(columns...)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		attachments = append(attachments, attachment)
 	}
 
 	if err = rows.Err(); err != nil {
-		return err
+		return nil, err
 	}
 
-	ticket.Attachments = attachments
-	return nil
+	return attachments, nil
 }
 
 func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
@@ -313,15 +316,21 @@ func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entit
 
 	// Reading Tags and Attachments for each Ticket in new circle due
 	// to next error: https://github.com/lib/pq/issues/635
-	// Using ticketIndex to avoid range iter semantics error, via using copied variable.
-	for ticketIndex := range tickets {
-		if err = repo.processTicketTags(ctx, &tickets[ticketIndex], connection); err != nil {
+	// Using ticket index to avoid range iter semantics error, via using copied variable.
+	for i, ticket := range tickets {
+		tagsIDs, err := repo.getTicketTagsIDs(ctx, ticket.ID, connection)
+		if err != nil {
 			return nil, err
 		}
 
-		if err = repo.processTicketAttachments(ctx, &tickets[ticketIndex], connection); err != nil {
+		tickets[i].TagIDs = tagsIDs
+
+		attachments, err := repo.getTicketAttachments(ctx, ticket.ID, connection)
+		if err != nil {
 			return nil, err
 		}
+
+		tickets[i].Attachments = attachments
 	}
 
 	return tickets, nil
@@ -379,15 +388,21 @@ func (repo *CommonTicketsRepository) GetUserTickets(ctx context.Context, userID 
 
 	// Reading Tags and Attachments for each Ticket in new circle due
 	// to next error: https://github.com/lib/pq/issues/635
-	// Using ticketIndex to avoid range iter semantics error, via using copied variable.
-	for ticketIndex := range tickets {
-		if err = repo.processTicketTags(ctx, &tickets[ticketIndex], connection); err != nil {
+	// Using ticket index to avoid range iter semantics error, via using copied variable.
+	for i, ticket := range tickets {
+		tagsIDs, err := repo.getTicketTagsIDs(ctx, ticket.ID, connection)
+		if err != nil {
 			return nil, err
 		}
 
-		if err = repo.processTicketAttachments(ctx, &tickets[ticketIndex], connection); err != nil {
+		tickets[i].TagIDs = tagsIDs
+
+		attachments, err := repo.getTicketAttachments(ctx, ticket.ID, connection)
+		if err != nil {
 			return nil, err
 		}
+
+		tickets[i].Attachments = attachments
 	}
 
 	return tickets, nil
