@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/DKhorkov/hmtm-tickets/internal/app"
 	toysgrpcclient "github.com/DKhorkov/hmtm-tickets/internal/clients/toys/grpc"
 	"github.com/DKhorkov/hmtm-tickets/internal/config"
@@ -10,6 +12,7 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/usecases"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 func main() {
@@ -39,19 +42,38 @@ func main() {
 		}
 	}()
 
+	traceProvider, err := tracing.New(settings.Tracing.Server)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = traceProvider.Shutdown(context.Background()); err != nil {
+			logging.LogError(logger, "Error shutting down tracer", err)
+		}
+	}()
+
 	toysClient, err := toysgrpcclient.New(
 		settings.Clients.Toys.Host,
 		settings.Clients.Toys.Port,
 		settings.Clients.Toys.RetriesCount,
 		settings.Clients.Toys.RetryTimeout,
 		logger,
+		traceProvider,
+		settings.Tracing.Spans.Clients.Toys,
 	)
 
 	if err != nil {
 		panic(err)
 	}
 
-	ticketsRepository := repositories.NewCommonTicketsRepository(dbConnector, logger)
+	ticketsRepository := repositories.NewCommonTicketsRepository(
+		dbConnector,
+		logger,
+		traceProvider,
+		settings.Tracing.Spans.Repositories.Tickets,
+	)
+
 	toysRepository := repositories.NewGrpcToysRepository(toysClient)
 	ticketsService := services.NewCommonTicketsService(
 		ticketsRepository,
@@ -59,7 +81,13 @@ func main() {
 		logger,
 	)
 
-	respondsRepository := repositories.NewCommonRespondsRepository(dbConnector, logger)
+	respondsRepository := repositories.NewCommonRespondsRepository(
+		dbConnector,
+		logger,
+		traceProvider,
+		settings.Tracing.Spans.Repositories.Responds,
+	)
+
 	respondsService := services.NewCommonRespondsService(
 		respondsRepository,
 		toysRepository,
@@ -76,6 +104,8 @@ func main() {
 		settings.HTTP.Port,
 		useCases,
 		logger,
+		traceProvider,
+		settings.Tracing.Spans.Root,
 	)
 
 	application := app.New(controller)

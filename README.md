@@ -100,3 +100,8 @@ To print status of all migrations, use next command:
 ```shell
 task -d scripts migrations_status
 ```
+
+## Tracing
+
+To see tracing open
+next [link](http://localhost:16686) in browser.

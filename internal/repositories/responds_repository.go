@@ -7,27 +7,39 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 func NewCommonRespondsRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
+	traceProvider tracing.TraceProvider,
+	spanConfig tracing.SpanConfig,
 ) *CommonRespondsRepository {
 	return &CommonRespondsRepository{
-		dbConnector: dbConnector,
-		logger:      logger,
+		dbConnector:   dbConnector,
+		logger:        logger,
+		traceProvider: traceProvider,
+		spanConfig:    spanConfig,
 	}
 }
 
 type CommonRespondsRepository struct {
-	dbConnector db.Connector
-	logger      *slog.Logger
+	dbConnector   db.Connector
+	logger        *slog.Logger
+	traceProvider tracing.TraceProvider
+	spanConfig    tracing.SpanConfig
 }
 
 func (repo *CommonRespondsRepository) RespondToTicket(
 	ctx context.Context,
 	respondData entities.RespondToTicketDTO,
 ) (uint64, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return 0, err
@@ -51,10 +63,16 @@ func (repo *CommonRespondsRepository) RespondToTicket(
 		return 0, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return respondID, nil
 }
 
 func (repo *CommonRespondsRepository) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -78,6 +96,7 @@ func (repo *CommonRespondsRepository) GetRespondByID(ctx context.Context, id uin
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return respond, nil
 }
 
@@ -85,6 +104,11 @@ func (repo *CommonRespondsRepository) GetTicketResponds(
 	ctx context.Context,
 	ticketID uint64,
 ) ([]entities.Respond, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -133,6 +157,7 @@ func (repo *CommonRespondsRepository) GetTicketResponds(
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return responds, nil
 }
 
@@ -140,6 +165,11 @@ func (repo *CommonRespondsRepository) GetMasterResponds(
 	ctx context.Context,
 	masterID uint64,
 ) ([]entities.Respond, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -188,5 +218,6 @@ func (repo *CommonRespondsRepository) GetMasterResponds(
 		return nil, err
 	}
 
+	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return responds, nil
 }
