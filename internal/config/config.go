@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/DKhorkov/libs/tracing"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/loadenv"
 	"github.com/DKhorkov/libs/logging"
@@ -11,6 +15,8 @@ import (
 
 func New() Config {
 	return Config{
+		Environment: loadenv.GetEnv("ENVIRONMENT", "local"),
+		Version:     loadenv.GetEnv("VERSION", "latest"),
 		HTTP: HTTPConfig{
 			Host: loadenv.GetEnv("HOST", "0.0.0.0"),
 			Port: loadenv.GetEnvAsInt("PORT", 8050),
@@ -48,6 +54,123 @@ func New() Config {
 				),
 			},
 		},
+		Tracing: TracingConfig{
+			Server: tracing.Config{
+				ServiceName:    loadenv.GetEnv("TRACING_SERVICE_NAME", "hmtm-tickets"),
+				ServiceVersion: loadenv.GetEnv("VERSION", "latest"),
+				JaegerURL: fmt.Sprintf(
+					"http://%s:%d/api/traces",
+					loadenv.GetEnv("TRACING_JAEGER_HOST", "0.0.0.0"),
+					loadenv.GetEnvAsInt("TRACING_API_TRACES_PORT", 14268),
+				),
+			},
+			Spans: SpansConfig{
+				Root: tracing.SpanConfig{
+					Opts: []trace.SpanStartOption{
+						trace.WithAttributes(
+							attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+						),
+					},
+					Events: tracing.SpanEventsConfig{
+						Start: tracing.SpanEventConfig{
+							Name: "Calling handler",
+							Opts: []trace.EventOption{
+								trace.WithAttributes(
+									attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+								),
+							},
+						},
+						End: tracing.SpanEventConfig{
+							Name: "Received response from handler",
+							Opts: []trace.EventOption{
+								trace.WithAttributes(
+									attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+								),
+							},
+						},
+					},
+				},
+				Repositories: SpanRepositories{
+					Responds: tracing.SpanConfig{
+						Opts: []trace.SpanStartOption{
+							trace.WithAttributes(
+								attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+							),
+						},
+						Events: tracing.SpanEventsConfig{
+							Start: tracing.SpanEventConfig{
+								Name: "Calling database",
+								Opts: []trace.EventOption{
+									trace.WithAttributes(
+										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									),
+								},
+							},
+							End: tracing.SpanEventConfig{
+								Name: "Received response from database",
+								Opts: []trace.EventOption{
+									trace.WithAttributes(
+										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									),
+								},
+							},
+						},
+					},
+					Tickets: tracing.SpanConfig{
+						Opts: []trace.SpanStartOption{
+							trace.WithAttributes(
+								attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+							),
+						},
+						Events: tracing.SpanEventsConfig{
+							Start: tracing.SpanEventConfig{
+								Name: "Calling database",
+								Opts: []trace.EventOption{
+									trace.WithAttributes(
+										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									),
+								},
+							},
+							End: tracing.SpanEventConfig{
+								Name: "Received response from database",
+								Opts: []trace.EventOption{
+									trace.WithAttributes(
+										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									),
+								},
+							},
+						},
+					},
+				},
+				Clients: SpanClients{
+					Toys: tracing.SpanConfig{
+						Opts: []trace.SpanStartOption{
+							trace.WithAttributes(
+								attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+							),
+						},
+						Events: tracing.SpanEventsConfig{
+							Start: tracing.SpanEventConfig{
+								Name: "Calling gRPC Toys client",
+								Opts: []trace.EventOption{
+									trace.WithAttributes(
+										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									),
+								},
+							},
+							End: tracing.SpanEventConfig{
+								Name: "Received response from gRPC Toys client",
+								Opts: []trace.EventOption{
+									trace.WithAttributes(
+										attribute.String("Environment", loadenv.GetEnv("ENVIRONMENT", "local")),
+									),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -67,9 +190,32 @@ type HTTPConfig struct {
 	Port int
 }
 
+type TracingConfig struct {
+	Server tracing.Config
+	Spans  SpansConfig
+}
+
+type SpansConfig struct {
+	Root         tracing.SpanConfig
+	Repositories SpanRepositories
+	Clients      SpanClients
+}
+
+type SpanRepositories struct {
+	Responds tracing.SpanConfig
+	Tickets  tracing.SpanConfig
+}
+
+type SpanClients struct {
+	Toys tracing.SpanConfig
+}
+
 type Config struct {
-	HTTP     HTTPConfig
-	Database db.Config
-	Logging  logging.Config
-	Clients  ClientsConfig
+	HTTP        HTTPConfig
+	Database    db.Config
+	Logging     logging.Config
+	Clients     ClientsConfig
+	Tracing     TracingConfig
+	Environment string
+	Version     string
 }

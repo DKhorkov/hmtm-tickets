@@ -5,14 +5,16 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
-	customgrpc "github.com/DKhorkov/libs/grpc"
-	"github.com/DKhorkov/libs/logging"
 	grpclogging "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
+	customgrpc "github.com/DKhorkov/libs/grpc/interceptors"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 type Client struct {
@@ -27,6 +29,8 @@ func New(
 	retriesCount int,
 	retriesTimeout time.Duration,
 	logger *slog.Logger,
+	traceProvider tracing.TraceProvider,
+	spanConfig tracing.SpanConfig,
 ) (*Client, error) {
 	// Options for interceptors (перехватчики / middlewares) for retries purposes:
 	retryOptions := []grpcretry.CallOption{
@@ -50,6 +54,7 @@ func New(
 			insecure.NewCredentials(),
 		),
 		grpc.WithChainUnaryInterceptor( // Middlewares. Using chain not to overwrite interceptors.
+			customgrpc.UnaryClientTracingInterceptor(traceProvider, spanConfig),
 			grpclogging.UnaryClientInterceptor(
 				customgrpc.UnaryClientLoggingInterceptor(logger),
 				logOptions...,

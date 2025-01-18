@@ -371,9 +371,14 @@ issues:
         - mnd
         - gosec
         - govet
+        - funlen
     - path: "internal/services/responds_service_test.go"
       linters:
         - gochecknoglobals
     - path: "internal/services/tickets_service_test.go"
       linters:
         - gochecknoglobals
+    - path: "internal/config/config.go"
+      linters:
+        - nosprintfhostport
+        - funlen
