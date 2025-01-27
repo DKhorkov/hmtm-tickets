@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DKhorkov/libs/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/loadenv"
 	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 )
 
 func New() Config {

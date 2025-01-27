@@ -16,6 +16,10 @@ func (e CategoryNotFoundError) Error() string {
 	return fmt.Sprintf(template, e.Message)
 }
 
+func (e CategoryNotFoundError) Unwrap() error {
+	return e.BaseErr
+}
+
 type TagNotFoundError struct {
 	Message string
 	BaseErr error
@@ -28,4 +32,8 @@ func (e TagNotFoundError) Error() string {
 	}
 
 	return fmt.Sprintf(template, e.Message)
+}
+
+func (e TagNotFoundError) Unwrap() error {
+	return e.BaseErr
 }

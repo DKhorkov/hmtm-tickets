@@ -20,6 +20,10 @@ func (e TicketNotFoundError) Error() string {
 	return template
 }
 
+func (e TicketNotFoundError) Unwrap() error {
+	return e.BaseErr
+}
+
 type TicketAlreadyExistsError struct {
 	Message string
 	BaseErr error
@@ -36,4 +40,8 @@ func (e TicketAlreadyExistsError) Error() string {
 	}
 
 	return template
+}
+
+func (e TicketAlreadyExistsError) Unwrap() error {
+	return e.BaseErr
 }

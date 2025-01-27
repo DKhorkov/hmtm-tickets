@@ -20,6 +20,10 @@ func (e RespondNotFoundError) Error() string {
 	return template
 }
 
+func (e RespondNotFoundError) Unwrap() error {
+	return e.BaseErr
+}
+
 type RespondAlreadyExistsError struct {
 	Message string
 	BaseErr error
@@ -38,6 +42,10 @@ func (e RespondAlreadyExistsError) Error() string {
 	return template
 }
 
+func (e RespondAlreadyExistsError) Unwrap() error {
+	return e.BaseErr
+}
+
 type RespondToOwnTicketError struct {
 	Message string
 	BaseErr error
@@ -54,4 +62,8 @@ func (e RespondToOwnTicketError) Error() string {
 	}
 
 	return template
+}
+
+func (e RespondToOwnTicketError) Unwrap() error {
+	return e.BaseErr
 }
