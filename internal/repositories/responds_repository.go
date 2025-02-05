@@ -39,6 +39,7 @@ func (repo *CommonRespondsRepository) RespondToTicket(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -63,7 +64,6 @@ func (repo *CommonRespondsRepository) RespondToTicket(
 		return 0, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return respondID, nil
 }
 
@@ -72,6 +72,7 @@ func (repo *CommonRespondsRepository) GetRespondByID(ctx context.Context, id uin
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -96,7 +97,6 @@ func (repo *CommonRespondsRepository) GetRespondByID(ctx context.Context, id uin
 		return nil, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return respond, nil
 }
 
@@ -108,6 +108,7 @@ func (repo *CommonRespondsRepository) GetTicketResponds(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -157,7 +158,6 @@ func (repo *CommonRespondsRepository) GetTicketResponds(
 		return nil, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return responds, nil
 }
 
@@ -169,6 +169,7 @@ func (repo *CommonRespondsRepository) GetMasterResponds(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -218,6 +219,5 @@ func (repo *CommonRespondsRepository) GetMasterResponds(
 		return nil, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return responds, nil
 }
