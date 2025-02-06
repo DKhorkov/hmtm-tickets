@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 
+	"github.com/DKhorkov/libs/db"
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
+
 	"github.com/DKhorkov/hmtm-tickets/internal/app"
 	toysgrpcclient "github.com/DKhorkov/hmtm-tickets/internal/clients/toys/grpc"
 	"github.com/DKhorkov/hmtm-tickets/internal/config"
@@ -10,9 +14,6 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/repositories"
 	"github.com/DKhorkov/hmtm-tickets/internal/services"
 	"github.com/DKhorkov/hmtm-tickets/internal/usecases"
-	"github.com/DKhorkov/libs/db"
-	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/tracing"
 )
 
 func main() {

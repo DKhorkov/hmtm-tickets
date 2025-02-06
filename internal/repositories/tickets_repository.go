@@ -7,10 +7,11 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
+
+	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
 func NewCommonTicketsRepository(
@@ -42,6 +43,7 @@ func (repo *CommonTicketsRepository) CreateTicket(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	transaction, err := repo.dbConnector.Transaction(ctx)
 	if err != nil {
@@ -137,7 +139,6 @@ func (repo *CommonTicketsRepository) CreateTicket(
 		return 0, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return ticketID, nil
 }
 
@@ -146,6 +147,7 @@ func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint6
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -185,7 +187,6 @@ func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint6
 
 	ticket.Attachments = attachments
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return ticket, nil
 }
 
@@ -198,6 +199,7 @@ func (repo *CommonTicketsRepository) getTicketTagsIDs(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	rows, err := connection.QueryContext(
 		ctx,
@@ -239,7 +241,6 @@ func (repo *CommonTicketsRepository) getTicketTagsIDs(
 		return nil, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return tagIDs, err
 }
 
@@ -252,6 +253,7 @@ func (repo *CommonTicketsRepository) getTicketAttachments(
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	rows, err := connection.QueryContext(
 		ctx,
@@ -294,7 +296,6 @@ func (repo *CommonTicketsRepository) getTicketAttachments(
 		return nil, err
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return attachments, nil
 }
 
@@ -303,6 +304,7 @@ func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entit
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -370,7 +372,6 @@ func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entit
 		tickets[i].Attachments = attachments
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return tickets, nil
 }
 
@@ -379,6 +380,7 @@ func (repo *CommonTicketsRepository) GetUserTickets(ctx context.Context, userID 
 	defer span.End()
 
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
 	connection, err := repo.dbConnector.Connection(ctx)
 	if err != nil {
@@ -448,6 +450,5 @@ func (repo *CommonTicketsRepository) GetUserTickets(ctx context.Context, userID 
 		tickets[i].Attachments = attachments
 	}
 
-	span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 	return tickets, nil
 }

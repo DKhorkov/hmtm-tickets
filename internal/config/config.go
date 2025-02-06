@@ -42,7 +42,7 @@ func New() Config {
 		},
 		Logging: logging.Config{
 			Level:       logging.Levels.DEBUG,
-			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().Format("02-01-2006")),
+			LogFilePath: fmt.Sprintf("logs/%s.log", time.Now().UTC().Format("02-01-2006")),
 		},
 		Clients: ClientsConfig{
 			Toys: ClientConfig{

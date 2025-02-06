@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/DKhorkov/hmtm-toys v0.0.7
-	github.com/DKhorkov/libs v1.2.10
+	github.com/DKhorkov/libs v1.2.13
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel v1.34.0
