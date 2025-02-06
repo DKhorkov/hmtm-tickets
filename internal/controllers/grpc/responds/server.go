@@ -10,12 +10,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	customgrpc "github.com/DKhorkov/libs/grpc"
+	"github.com/DKhorkov/libs/logging"
+
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
-	customgrpc "github.com/DKhorkov/libs/grpc"
-	"github.com/DKhorkov/libs/logging"
 )
 
 // RegisterServer handler (serverAPI) for RespondsServer to gRPC server:.

@@ -1,9 +1,10 @@
 package tickets
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func prepareTicketOut(ticket entities.Ticket) *tickets.GetTicketOut {

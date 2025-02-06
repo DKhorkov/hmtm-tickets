@@ -7,10 +7,11 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
+
+	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
 func NewCommonTicketsRepository(

@@ -3,9 +3,8 @@ package usecases
 import (
 	"context"
 
-	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
-
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
+	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 

@@ -3,12 +3,12 @@ package repositories
 import (
 	"context"
 
+	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
 	"github.com/DKhorkov/libs/contextlib"
 	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
-	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
 )
 
 func NewGrpcToysRepository(client interfaces.ToysGrpcClient) *GrpcToysRepository {
