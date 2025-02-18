@@ -29,7 +29,7 @@ func New(
 	retriesCount int,
 	retriesTimeout time.Duration,
 	logger *slog.Logger,
-	traceProvider tracing.TraceProvider,
+	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
 ) (*Client, error) {
 	// Options for interceptors (перехватчики / middlewares) for retries purposes:

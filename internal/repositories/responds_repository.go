@@ -11,13 +11,13 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
-func NewCommonRespondsRepository(
+func NewRespondsRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
-	traceProvider tracing.TraceProvider,
+	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
-) *CommonRespondsRepository {
-	return &CommonRespondsRepository{
+) *RespondsRepository {
+	return &RespondsRepository{
 		dbConnector:   dbConnector,
 		logger:        logger,
 		traceProvider: traceProvider,
@@ -25,14 +25,14 @@ func NewCommonRespondsRepository(
 	}
 }
 
-type CommonRespondsRepository struct {
+type RespondsRepository struct {
 	dbConnector   db.Connector
 	logger        *slog.Logger
-	traceProvider tracing.TraceProvider
+	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }
 
-func (repo *CommonRespondsRepository) RespondToTicket(
+func (repo *RespondsRepository) RespondToTicket(
 	ctx context.Context,
 	respondData entities.RespondToTicketDTO,
 ) (uint64, error) {
@@ -68,7 +68,7 @@ func (repo *CommonRespondsRepository) RespondToTicket(
 	return respondID, nil
 }
 
-func (repo *CommonRespondsRepository) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
+func (repo *RespondsRepository) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -101,7 +101,7 @@ func (repo *CommonRespondsRepository) GetRespondByID(ctx context.Context, id uin
 	return respond, nil
 }
 
-func (repo *CommonRespondsRepository) GetTicketResponds(
+func (repo *RespondsRepository) GetTicketResponds(
 	ctx context.Context,
 	ticketID uint64,
 ) ([]entities.Respond, error) {
@@ -162,7 +162,7 @@ func (repo *CommonRespondsRepository) GetTicketResponds(
 	return responds, nil
 }
 
-func (repo *CommonRespondsRepository) GetMasterResponds(
+func (repo *RespondsRepository) GetMasterResponds(
 	ctx context.Context,
 	masterID uint64,
 ) ([]entities.Respond, error) {

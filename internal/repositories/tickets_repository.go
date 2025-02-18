@@ -14,13 +14,13 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
-func NewCommonTicketsRepository(
+func NewTicketsRepository(
 	dbConnector db.Connector,
 	logger *slog.Logger,
-	traceProvider tracing.TraceProvider,
+	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
-) *CommonTicketsRepository {
-	return &CommonTicketsRepository{
+) *TicketsRepository {
+	return &TicketsRepository{
 		dbConnector:   dbConnector,
 		logger:        logger,
 		traceProvider: traceProvider,
@@ -28,14 +28,14 @@ func NewCommonTicketsRepository(
 	}
 }
 
-type CommonTicketsRepository struct {
+type TicketsRepository struct {
 	dbConnector   db.Connector
 	logger        *slog.Logger
-	traceProvider tracing.TraceProvider
+	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }
 
-func (repo *CommonTicketsRepository) CreateTicket(
+func (repo *TicketsRepository) CreateTicket(
 	ctx context.Context,
 	ticketData entities.CreateTicketDTO,
 ) (uint64, error) {
@@ -142,7 +142,7 @@ func (repo *CommonTicketsRepository) CreateTicket(
 	return ticketID, nil
 }
 
-func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error) {
+func (repo *TicketsRepository) GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -190,7 +190,7 @@ func (repo *CommonTicketsRepository) GetTicketByID(ctx context.Context, id uint6
 	return ticket, nil
 }
 
-func (repo *CommonTicketsRepository) getTicketTagsIDs(
+func (repo *TicketsRepository) getTicketTagsIDs(
 	ctx context.Context,
 	ticketID uint64,
 	connection *sql.Conn,
@@ -244,7 +244,7 @@ func (repo *CommonTicketsRepository) getTicketTagsIDs(
 	return tagIDs, err
 }
 
-func (repo *CommonTicketsRepository) getTicketAttachments(
+func (repo *TicketsRepository) getTicketAttachments(
 	ctx context.Context,
 	ticketID uint64,
 	connection *sql.Conn,
@@ -299,7 +299,7 @@ func (repo *CommonTicketsRepository) getTicketAttachments(
 	return attachments, nil
 }
 
-func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
+func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -375,7 +375,7 @@ func (repo *CommonTicketsRepository) GetAllTickets(ctx context.Context) ([]entit
 	return tickets, nil
 }
 
-func (repo *CommonTicketsRepository) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
+func (repo *TicketsRepository) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 

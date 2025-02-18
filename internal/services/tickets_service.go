@@ -13,25 +13,25 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
-func NewCommonTicketsService(
+func NewTicketsService(
 	ticketsRepository interfaces.TicketsRepository,
 	toysRepository interfaces.ToysRepository,
 	logger *slog.Logger,
-) *CommonTicketsService {
-	return &CommonTicketsService{
+) *TicketsService {
+	return &TicketsService{
 		ticketsRepository: ticketsRepository,
 		toysRepository:    toysRepository,
 		logger:            logger,
 	}
 }
 
-type CommonTicketsService struct {
+type TicketsService struct {
 	ticketsRepository interfaces.TicketsRepository
 	toysRepository    interfaces.ToysRepository
 	logger            *slog.Logger
 }
 
-func (service *CommonTicketsService) CreateTicket(
+func (service *TicketsService) CreateTicket(
 	ctx context.Context,
 	ticketData entities.CreateTicketDTO,
 ) (uint64, error) {
@@ -50,7 +50,7 @@ func (service *CommonTicketsService) CreateTicket(
 	return service.ticketsRepository.CreateTicket(ctx, ticketData)
 }
 
-func (service *CommonTicketsService) validateCategory(ctx context.Context, categoryID uint32) error {
+func (service *TicketsService) validateCategory(ctx context.Context, categoryID uint32) error {
 	categories, err := service.toysRepository.GetAllCategories(ctx)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (service *CommonTicketsService) validateCategory(ctx context.Context, categ
 	return &customerrors.CategoryNotFoundError{Message: strconv.FormatUint(uint64(categoryID), 10)}
 }
 
-func (service *CommonTicketsService) validateTags(ctx context.Context, tagIDs []uint32) error {
+func (service *TicketsService) validateTags(ctx context.Context, tagIDs []uint32) error {
 	tags, err := service.toysRepository.GetAllTags(ctx)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (service *CommonTicketsService) validateTags(ctx context.Context, tagIDs []
 	return nil
 }
 
-func (service *CommonTicketsService) checkTicketExistence(
+func (service *TicketsService) checkTicketExistence(
 	ctx context.Context,
 	ticketData entities.CreateTicketDTO,
 ) bool {
@@ -103,7 +103,7 @@ func (service *CommonTicketsService) checkTicketExistence(
 	return false
 }
 
-func (service *CommonTicketsService) GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error) {
+func (service *TicketsService) GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error) {
 	ticket, err := service.ticketsRepository.GetTicketByID(ctx, id)
 	if err != nil {
 		logging.LogErrorContext(
@@ -119,10 +119,10 @@ func (service *CommonTicketsService) GetTicketByID(ctx context.Context, id uint6
 	return ticket, nil
 }
 
-func (service *CommonTicketsService) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
+func (service *TicketsService) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
 	return service.ticketsRepository.GetAllTickets(ctx)
 }
 
-func (service *CommonTicketsService) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
+func (service *TicketsService) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
 	return service.ticketsRepository.GetUserTickets(ctx, userID)
 }
