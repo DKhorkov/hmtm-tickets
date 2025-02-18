@@ -45,7 +45,7 @@ var (
 	errMasterNotFound = errors.New("master not found")
 )
 
-func TestCommonRespondsService_RespondToTicket(t *testing.T) {
+func TestRespondsService_RespondToTicket(t *testing.T) {
 	testCases := []struct {
 		name                  string
 		rawRespondToTicketDTO entities.RawRespondToTicketDTO
@@ -96,7 +96,7 @@ func TestCommonRespondsService_RespondToTicket(t *testing.T) {
 	toysRepository.EXPECT().GetMasterByUserID(gomock.Any(), uint64(3)).Return(nil, errMasterNotFound).MaxTimes(1)
 
 	logger := slog.New(slog.NewJSONHandler(bytes.NewBuffer(make([]byte, 1000)), nil))
-	respondsService := services.NewCommonRespondsService(respondsRepository, toysRepository, logger)
+	respondsService := services.NewRespondsService(respondsRepository, toysRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
@@ -114,7 +114,7 @@ func TestCommonRespondsService_RespondToTicket(t *testing.T) {
 	}
 }
 
-func TestCommonRespondsService_GetRespondByID(t *testing.T) {
+func TestRespondsService_GetRespondByID(t *testing.T) {
 	testCases := []struct {
 		name          string
 		respondID     uint64
@@ -145,7 +145,7 @@ func TestCommonRespondsService_GetRespondByID(t *testing.T) {
 	).MaxTimes(1)
 
 	logger := slog.New(slog.NewJSONHandler(bytes.NewBuffer(make([]byte, 1000)), nil))
-	respondsService := services.NewCommonRespondsService(respondsRepository, nil, logger)
+	respondsService := services.NewRespondsService(respondsRepository, nil, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
@@ -163,7 +163,7 @@ func TestCommonRespondsService_GetRespondByID(t *testing.T) {
 	}
 }
 
-func TestCommonRespondsService_GetUserResponds(t *testing.T) {
+func TestRespondsService_GetUserResponds(t *testing.T) {
 	testCases := []struct {
 		name          string
 		userID        uint64
@@ -211,7 +211,7 @@ func TestCommonRespondsService_GetUserResponds(t *testing.T) {
 	).MaxTimes(1)
 
 	logger := slog.New(slog.NewJSONHandler(bytes.NewBuffer(make([]byte, 1000)), nil))
-	respondsService := services.NewCommonRespondsService(respondsRepository, toysRepository, logger)
+	respondsService := services.NewRespondsService(respondsRepository, toysRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {

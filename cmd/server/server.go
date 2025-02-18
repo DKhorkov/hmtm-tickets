@@ -68,34 +68,34 @@ func main() {
 		panic(err)
 	}
 
-	ticketsRepository := repositories.NewCommonTicketsRepository(
+	ticketsRepository := repositories.NewTicketsRepository(
 		dbConnector,
 		logger,
 		traceProvider,
 		settings.Tracing.Spans.Repositories.Tickets,
 	)
 
-	toysRepository := repositories.NewGrpcToysRepository(toysClient)
-	ticketsService := services.NewCommonTicketsService(
+	toysRepository := repositories.NewToysRepository(toysClient)
+	ticketsService := services.NewTicketsService(
 		ticketsRepository,
 		toysRepository,
 		logger,
 	)
 
-	respondsRepository := repositories.NewCommonRespondsRepository(
+	respondsRepository := repositories.NewRespondsRepository(
 		dbConnector,
 		logger,
 		traceProvider,
 		settings.Tracing.Spans.Repositories.Responds,
 	)
 
-	respondsService := services.NewCommonRespondsService(
+	respondsService := services.NewRespondsService(
 		respondsRepository,
 		toysRepository,
 		logger,
 	)
 
-	useCases := usecases.NewCommonUseCases(
+	useCases := usecases.New(
 		ticketsService,
 		respondsService,
 	)

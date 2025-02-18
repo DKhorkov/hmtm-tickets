@@ -43,7 +43,7 @@ var (
 	}
 )
 
-func TestCommonTicketsService_CreateTicket(t *testing.T) {
+func TestTicketsService_CreateTicket(t *testing.T) {
 	testCases := []struct {
 		name            string
 		createTicketDTO entities.CreateTicketDTO
@@ -109,7 +109,7 @@ func TestCommonTicketsService_CreateTicket(t *testing.T) {
 	toysRepository.EXPECT().GetAllCategories(gomock.Any()).Return(nil, nil).MaxTimes(1)
 
 	logger := slog.New(slog.NewJSONHandler(bytes.NewBuffer(make([]byte, 1000)), nil))
-	ticketsService := services.NewCommonTicketsService(ticketsRepository, toysRepository, logger)
+	ticketsService := services.NewTicketsService(ticketsRepository, toysRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
@@ -127,7 +127,7 @@ func TestCommonTicketsService_CreateTicket(t *testing.T) {
 	}
 }
 
-func TestCommonTicketsService_GetTicketByID(t *testing.T) {
+func TestTicketsService_GetTicketByID(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ticketID      uint64
@@ -158,7 +158,7 @@ func TestCommonTicketsService_GetTicketByID(t *testing.T) {
 	).MaxTimes(1)
 
 	logger := slog.New(slog.NewJSONHandler(bytes.NewBuffer(make([]byte, 1000)), nil))
-	ticketsService := services.NewCommonTicketsService(ticketsRepository, nil, logger)
+	ticketsService := services.NewTicketsService(ticketsRepository, nil, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {

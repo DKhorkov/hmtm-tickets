@@ -11,15 +11,15 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
-func NewGrpcToysRepository(client interfaces.ToysGrpcClient) *GrpcToysRepository {
-	return &GrpcToysRepository{client: client}
+func NewToysRepository(client interfaces.ToysClient) *ToysRepository {
+	return &ToysRepository{client: client}
 }
 
-type GrpcToysRepository struct {
-	client interfaces.ToysGrpcClient
+type ToysRepository struct {
+	client interfaces.ToysClient
 }
 
-func (repo *GrpcToysRepository) GetMasterByUserID(ctx context.Context, userID uint64) (*entities.Master, error) {
+func (repo *ToysRepository) GetMasterByUserID(ctx context.Context, userID uint64) (*entities.Master, error) {
 	requestID, _ := contextlib.GetValue[string](ctx, requestid.Key)
 	response, err := repo.client.GetMasterByUser(
 		ctx,
@@ -42,7 +42,7 @@ func (repo *GrpcToysRepository) GetMasterByUserID(ctx context.Context, userID ui
 	}, nil
 }
 
-func (repo *GrpcToysRepository) GetAllCategories(ctx context.Context) ([]entities.Category, error) {
+func (repo *ToysRepository) GetAllCategories(ctx context.Context) ([]entities.Category, error) {
 	requestID, _ := contextlib.GetValue[string](ctx, requestid.Key)
 	response, err := repo.client.GetCategories(
 		ctx,
@@ -61,7 +61,7 @@ func (repo *GrpcToysRepository) GetAllCategories(ctx context.Context) ([]entitie
 	return categories, nil
 }
 
-func (repo *GrpcToysRepository) GetAllTags(ctx context.Context) ([]entities.Tag, error) {
+func (repo *ToysRepository) GetAllTags(ctx context.Context) ([]entities.Tag, error) {
 	requestID, _ := contextlib.GetValue[string](ctx, requestid.Key)
 	response, err := repo.client.GetTags(
 		ctx,
@@ -80,14 +80,14 @@ func (repo *GrpcToysRepository) GetAllTags(ctx context.Context) ([]entities.Tag,
 	return tags, nil
 }
 
-func (repo *GrpcToysRepository) processTagResponse(tagResponse *toys.GetTagOut) *entities.Tag {
+func (repo *ToysRepository) processTagResponse(tagResponse *toys.GetTagOut) *entities.Tag {
 	return &entities.Tag{
 		ID:   tagResponse.GetID(),
 		Name: tagResponse.GetName(),
 	}
 }
 
-func (repo *GrpcToysRepository) processCategoryResponse(categoryResponse *toys.GetCategoryOut) *entities.Category {
+func (repo *ToysRepository) processCategoryResponse(categoryResponse *toys.GetCategoryOut) *entities.Category {
 	return &entities.Category{
 		ID:   categoryResponse.GetID(),
 		Name: categoryResponse.GetName(),
