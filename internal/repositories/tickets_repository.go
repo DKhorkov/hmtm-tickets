@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/DKhorkov/libs/db"
@@ -16,7 +15,7 @@ import (
 
 func NewTicketsRepository(
 	dbConnector db.Connector,
-	logger *slog.Logger,
+	logger logging.Logger,
 	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
 ) *TicketsRepository {
@@ -30,7 +29,7 @@ func NewTicketsRepository(
 
 type TicketsRepository struct {
 	dbConnector   db.Connector
-	logger        *slog.Logger
+	logger        logging.Logger
 	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }
