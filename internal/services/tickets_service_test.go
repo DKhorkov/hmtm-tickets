@@ -61,7 +61,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
 				toysRepository *mockrepositories.MockToysRepository,
-				logger *loggerMock.MockLogger,
+				_ *loggerMock.MockLogger,
 			) {
 				toysRepository.
 					EXPECT().
@@ -96,7 +96,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
 				toysRepository *mockrepositories.MockToysRepository,
-				logger *loggerMock.MockLogger,
+				_ *loggerMock.MockLogger,
 			) {
 				toysRepository.
 					EXPECT().
@@ -139,9 +139,9 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 		{
 			name: "fail to create ticket due to tag not found",
 			setupMocks: func(
-				ticketsRepository *mockrepositories.MockTicketsRepository,
+				_ *mockrepositories.MockTicketsRepository,
 				toysRepository *mockrepositories.MockToysRepository,
-				logger *loggerMock.MockLogger,
+				_ *loggerMock.MockLogger,
 			) {
 				toysRepository.
 					EXPECT().
@@ -162,9 +162,9 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 		{
 			name: "fail to create ticket due to category not found",
 			setupMocks: func(
-				ticketsRepository *mockrepositories.MockTicketsRepository,
+				_ *mockrepositories.MockTicketsRepository,
 				toysRepository *mockrepositories.MockToysRepository,
-				logger *loggerMock.MockLogger,
+				_ *loggerMock.MockLogger,
 			) {
 				toysRepository.
 					EXPECT().

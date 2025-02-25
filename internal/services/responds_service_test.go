@@ -117,7 +117,6 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
-
 				toysRepository.
 					EXPECT().
 					GetMasterByUserID(gomock.Any(), uint64(2)).
