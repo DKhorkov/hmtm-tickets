@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/DKhorkov/libs/logging"
 
@@ -15,7 +14,7 @@ import (
 func NewRespondsService(
 	respondsRepository interfaces.RespondsRepository,
 	toysRepository interfaces.ToysRepository,
-	logger *slog.Logger,
+	logger logging.Logger,
 ) *RespondsService {
 	return &RespondsService{
 		respondsRepository: respondsRepository,
@@ -27,7 +26,7 @@ func NewRespondsService(
 type RespondsService struct {
 	respondsRepository interfaces.RespondsRepository
 	toysRepository     interfaces.ToysRepository
-	logger             *slog.Logger
+	logger             logging.Logger
 }
 
 func (service *RespondsService) RespondToTicket(

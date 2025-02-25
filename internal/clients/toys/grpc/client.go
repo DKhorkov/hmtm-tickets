@@ -2,7 +2,6 @@ package toysgrpcclient
 
 import (
 	"fmt"
-	"log/slog"
 	"time"
 
 	grpclogging "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
@@ -28,7 +27,7 @@ func New(
 	port int,
 	retriesCount int,
 	retriesTimeout time.Duration,
-	logger *slog.Logger,
+	logger logging.Logger,
 	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
 ) (*Client, error) {

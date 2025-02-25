@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
@@ -13,7 +12,7 @@ import (
 
 func NewRespondsRepository(
 	dbConnector db.Connector,
-	logger *slog.Logger,
+	logger logging.Logger,
 	traceProvider tracing.Provider,
 	spanConfig tracing.SpanConfig,
 ) *RespondsRepository {
@@ -27,7 +26,7 @@ func NewRespondsRepository(
 
 type RespondsRepository struct {
 	dbConnector   db.Connector
-	logger        *slog.Logger
+	logger        logging.Logger
 	traceProvider tracing.Provider
 	spanConfig    tracing.SpanConfig
 }

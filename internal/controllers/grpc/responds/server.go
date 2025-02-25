@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -20,7 +19,7 @@ import (
 )
 
 // RegisterServer handler (serverAPI) for RespondsServer to gRPC server:.
-func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
 	tickets.RegisterRespondsServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }
 
@@ -28,7 +27,7 @@ type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	tickets.UnimplementedRespondsServiceServer
 	useCases interfaces.UseCases
-	logger   *slog.Logger
+	logger   logging.Logger
 }
 
 // RespondToTicket handler creates new Respond to Ticket.

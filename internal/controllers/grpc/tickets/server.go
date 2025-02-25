@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -20,7 +19,7 @@ import (
 )
 
 // RegisterServer handler (serverAPI) for TicketsServer to gRPC server:.
-func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger *slog.Logger) {
+func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
 	tickets.RegisterTicketsServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
 }
 
@@ -28,7 +27,7 @@ type ServerAPI struct {
 	// Helps to test single endpoints, if others is not implemented yet
 	tickets.UnimplementedTicketsServiceServer
 	useCases interfaces.UseCases
-	logger   *slog.Logger
+	logger   logging.Logger
 }
 
 // CreateTicket handler creates new Ticket.
@@ -82,7 +81,7 @@ func (api *ServerAPI) GetTicket(ctx context.Context, in *tickets.GetTicketIn) (*
 }
 
 // GetTickets handler returns all Tickets.
-func (api *ServerAPI) GetTickets(ctx context.Context, in *emptypb.Empty) (*tickets.GetTicketsOut, error) {
+func (api *ServerAPI) GetTickets(ctx context.Context, _ *emptypb.Empty) (*tickets.GetTicketsOut, error) {
 	allTickets, err := api.useCases.GetAllTickets(ctx)
 	if err != nil {
 		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Tickets", err)
