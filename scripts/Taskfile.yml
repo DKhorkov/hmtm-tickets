@@ -142,7 +142,7 @@ tasks:
       - sudo chmod -R 777 postgres_data
       - sudo chmod -R 777 postgres_backups
       - mkdir -p ./coverage
-      - go test -v -shuffle=on -coverprofile ./coverage/coverage.out -coverpkg=./... ./...
+      - go test -v -shuffle=on -coverprofile ./coverage/coverage.out -coverpkg=./... ./... -tags=integration
       - go tool cover -html ./coverage/coverage.out -o ./coverage/coverage.html
 
   benchmarks:
