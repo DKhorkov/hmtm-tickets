@@ -20,7 +20,7 @@ type ToysRepository struct {
 }
 
 func (repo *ToysRepository) GetMasterByUserID(ctx context.Context, userID uint64) (*entities.Master, error) {
-	requestID, _ := contextlib.GetValue[string](ctx, requestid.Key)
+	requestID, _ := contextlib.ValueFromContext[string](ctx, requestid.Key)
 	response, err := repo.client.GetMasterByUser(
 		ctx,
 		&toys.GetMasterByUserIn{
@@ -43,7 +43,7 @@ func (repo *ToysRepository) GetMasterByUserID(ctx context.Context, userID uint64
 }
 
 func (repo *ToysRepository) GetAllCategories(ctx context.Context) ([]entities.Category, error) {
-	requestID, _ := contextlib.GetValue[string](ctx, requestid.Key)
+	requestID, _ := contextlib.ValueFromContext[string](ctx, requestid.Key)
 	response, err := repo.client.GetCategories(
 		ctx,
 		&toys.GetCategoriesIn{RequestID: requestID},
@@ -62,7 +62,7 @@ func (repo *ToysRepository) GetAllCategories(ctx context.Context) ([]entities.Ca
 }
 
 func (repo *ToysRepository) GetAllTags(ctx context.Context) ([]entities.Tag, error) {
-	requestID, _ := contextlib.GetValue[string](ctx, requestid.Key)
+	requestID, _ := contextlib.ValueFromContext[string](ctx, requestid.Key)
 	response, err := repo.client.GetTags(
 		ctx,
 		&toys.GetTagsIn{RequestID: requestID},
