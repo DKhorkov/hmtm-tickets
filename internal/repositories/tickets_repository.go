@@ -3,14 +3,32 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"strings"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
+)
+
+const (
+	selectAllColumns                   = "*"
+	ticketsTableName                   = "tickets"
+	ticketsAndTagsAssociationTableName = "tickets_tags_associations"
+	ticketsAttachmentsTableName        = "tickets_attachments"
+	idColumnName                       = "id"
+	categoryIDColumnName               = "category_id"
+	ticketNameColumnName               = "name"
+	ticketDescriptionColumnName        = "description"
+	ticketPriceColumnName              = "price"
+	ticketQuantityColumnName           = "quantity"
+	ticketIDColumnName                 = "ticket_id"
+	tagIDColumnName                    = "tag_id"
+	userIDColumnName                   = "user_id"
+	attachmentLinkColumnName           = "link"
+	returningIDSuffix                  = "RETURNING id"
 )
 
 func NewTicketsRepository(
@@ -56,79 +74,67 @@ func (repo *TicketsRepository) CreateTicket(
 		}
 	}()
 
+	stmt, params, err := sq.
+		Insert(ticketsTableName).
+		Columns(
+			userIDColumnName,
+			categoryIDColumnName,
+			ticketNameColumnName,
+			ticketDescriptionColumnName,
+			ticketPriceColumnName,
+			ticketQuantityColumnName,
+		).
+		Values(
+			ticketData.UserID,
+			ticketData.CategoryID,
+			ticketData.Name,
+			ticketData.Description,
+			ticketData.Price,
+			ticketData.Quantity,
+		).
+		Suffix(returningIDSuffix).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
+
+	if err != nil {
+		return 0, err
+	}
+
 	var ticketID uint64
-	err = transaction.QueryRow(
-		`
-			INSERT INTO tickets (user_id, category_id, name, description, price, quantity) 
-			VALUES ($1, $2, $3, $4, $5, $6)
-			RETURNING tickets.id
-		`,
-		ticketData.UserID,
-		ticketData.CategoryID,
-		ticketData.Name,
-		ticketData.Description,
-		ticketData.Price,
-		ticketData.Quantity,
-	).Scan(&ticketID)
+	if err = transaction.QueryRowContext(ctx, stmt, params...).Scan(&ticketID); err != nil {
+		return 0, err
+	}
 
 	if err != nil {
 		return 0, err
 	}
 
 	if len(ticketData.TagIDs) > 0 {
-		// Bulk insert of Ticket's Tags.
-		ticketTagsInsertPlaceholders := make([]string, 0, len(ticketData.TagIDs))
-		ticketTagsInsertValues := make([]interface{}, 0, len(ticketData.TagIDs))
-		for index, tagID := range ticketData.TagIDs {
-			ticketTagsInsertPlaceholder := fmt.Sprintf("($%d,$%d)",
-				index*2+1, // (*2) - where 2 is number of inserted params.
-				index*2+2,
-			)
-
-			ticketTagsInsertPlaceholders = append(ticketTagsInsertPlaceholders, ticketTagsInsertPlaceholder)
-			ticketTagsInsertValues = append(ticketTagsInsertValues, ticketID, tagID)
+		builder := sq.Insert(ticketsAndTagsAssociationTableName).Columns(ticketIDColumnName, tagIDColumnName)
+		for _, tagID := range ticketData.TagIDs {
+			builder = builder.Values(ticketID, tagID)
 		}
 
-		_, err = transaction.Exec(
-			`
-				INSERT INTO tickets_tags_associations (ticket_id, tag_id)
-				VALUES 
-			`+strings.Join(ticketTagsInsertPlaceholders, ","),
-			ticketTagsInsertValues...,
-		)
+		if stmt, params, err = builder.PlaceholderFormat(sq.Dollar).ToSql(); err != nil {
+			return 0, err
+		}
 
-		if err != nil {
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
 			return 0, err
 		}
 	}
 
 	if len(ticketData.Attachments) > 0 {
-		// Bulk insert of Ticket's Attachments.
-		ticketAttachmentsInsertPlaceholders := make([]string, 0, len(ticketData.Attachments))
-		ticketAttachmentsInsertValues := make([]interface{}, 0, len(ticketData.Attachments))
-		for index, attachment := range ticketData.Attachments {
-			ticketAttachmentsInsertPlaceholder := fmt.Sprintf("($%d,$%d)",
-				index*2+1, // (*2) - where 2 is number of inserted params.
-				index*2+2,
-			)
-
-			ticketAttachmentsInsertPlaceholders = append(
-				ticketAttachmentsInsertPlaceholders,
-				ticketAttachmentsInsertPlaceholder,
-			)
-
-			ticketAttachmentsInsertValues = append(ticketAttachmentsInsertValues, ticketID, attachment)
+		builder := sq.Insert(ticketsAttachmentsTableName).Columns(ticketIDColumnName, attachmentLinkColumnName)
+		for _, attachment := range ticketData.Attachments {
+			builder = builder.Values(ticketID, attachment)
 		}
 
-		_, err = transaction.Exec(
-			`
-				INSERT INTO tickets_attachments (ticket_id, link)
-				VALUES 
-			`+strings.Join(ticketAttachmentsInsertPlaceholders, ","),
-			ticketAttachmentsInsertValues...,
-		)
+		if stmt, params, err = builder.PlaceholderFormat(sq.Dollar).ToSql(); err != nil {
+			return 0, err
+		}
 
-		if err != nil {
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
 			return 0, err
 		}
 	}
@@ -155,20 +161,20 @@ func (repo *TicketsRepository) GetTicketByID(ctx context.Context, id uint64) (*e
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	ticket := &entities.Ticket{}
-	columns := db.GetEntityColumns(ticket)
-	columns = columns[:len(columns)-2] // Not to paste TagIDs and Attachments fields to Scan function.
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			SELECT * 
-			FROM tickets AS t
-			WHERE t.id = $1
-		`,
-		id,
-	).Scan(columns...)
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(ticketsTableName).
+		Where(sq.Eq{idColumnName: id}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 
 	if err != nil {
+		return nil, err
+	}
+
+	ticket := &entities.Ticket{}
+	columns := db.GetEntityColumns(ticket)
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}
 
@@ -200,14 +206,21 @@ func (repo *TicketsRepository) getTicketTagsIDs(
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
 	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
+	stmt, params, err := sq.
+		Select(tagIDColumnName).
+		From(ticketsAndTagsAssociationTableName).
+		Where(sq.Eq{ticketIDColumnName: ticketID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT tta.tag_id
-			FROM tickets_tags_associations AS tta
-			WHERE tta.ticket_id = $1
-		`,
-		ticketID,
+		stmt,
+		params...,
 	)
 
 	if err != nil {
@@ -254,14 +267,21 @@ func (repo *TicketsRepository) getTicketAttachments(
 	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
 	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
 
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(ticketsAttachmentsTableName).
+		Where(sq.Eq{ticketIDColumnName: ticketID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT *
-			FROM tickets_attachments AS ta
-			WHERE ta.ticket_id = $1
-		`,
-		ticketID,
+		stmt,
+		params...,
 	)
 
 	if err != nil {
@@ -312,12 +332,20 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(ticketsTableName).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT * 
-			FROM tickets
-		`,
+		stmt,
+		params...,
 	)
 
 	if err != nil {
@@ -388,14 +416,21 @@ func (repo *TicketsRepository) GetUserTickets(ctx context.Context, userID uint64
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(ticketsTableName).
+		Where(sq.Eq{userIDColumnName: userID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT * 
-			FROM tickets AS t
-			WHERE t.user_id = $1
-		`,
-		userID,
+		stmt,
+		params...,
 	)
 
 	if err != nil {

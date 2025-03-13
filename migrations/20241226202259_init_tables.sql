@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS tickets_tags_associations
     tag_id     INTEGER   NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ticket_id) REFERENCES tickets (id)
+    FOREIGN KEY (ticket_id) REFERENCES tickets (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS tickets_attachments
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS tickets_attachments
     link       VARCHAR   NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ticket_id) REFERENCES tickets (id)
+    FOREIGN KEY (ticket_id) REFERENCES tickets (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS responds
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS responds
     master_id  INTEGER   NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ticket_id) REFERENCES tickets (id)
+    FOREIGN KEY (ticket_id) REFERENCES tickets (id) ON DELETE CASCADE
 );
 -- +goose StatementEnd
 
