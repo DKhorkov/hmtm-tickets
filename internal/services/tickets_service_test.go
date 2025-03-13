@@ -67,25 +67,25 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 					EXPECT().
 					GetAllCategories(gomock.Any()).
 					Return([]entities.Category{{ID: categoryID}}, nil).
-					MaxTimes(1)
+					Times(1)
 
 				toysRepository.
 					EXPECT().
 					GetAllTags(gomock.Any()).
 					Return([]entities.Tag{{ID: tagID}}, nil).
-					MaxTimes(1)
+					Times(1)
 
 				ticketsRepository.
 					EXPECT().
 					GetUserTickets(gomock.Any(), userID).
 					Return(nil, nil).
-					MaxTimes(1)
+					Times(1)
 
 				ticketsRepository.
 					EXPECT().
 					CreateTicket(gomock.Any(), createTicketDTO).
 					Return(ticketID, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			createTicketDTO: createTicketDTO,
 			expected:        ticketID,
@@ -102,13 +102,13 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 					EXPECT().
 					GetAllCategories(gomock.Any()).
 					Return([]entities.Category{{ID: categoryID}}, nil).
-					MaxTimes(1)
+					Times(1)
 
 				toysRepository.
 					EXPECT().
 					GetAllTags(gomock.Any()).
 					Return([]entities.Tag{{ID: tagID}}, nil).
-					MaxTimes(1)
+					Times(1)
 
 				ticketsRepository.
 					EXPECT().
@@ -125,7 +125,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 						},
 						nil,
 					).
-					MaxTimes(1)
+					Times(1)
 			},
 			createTicketDTO: entities.CreateTicketDTO{
 				CategoryID:  categoryID,
@@ -147,13 +147,13 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 					EXPECT().
 					GetAllTags(gomock.Any()).
 					Return(nil, nil).
-					MaxTimes(1)
+					Times(1)
 
 				toysRepository.
 					EXPECT().
 					GetAllCategories(gomock.Any()).
 					Return([]entities.Category{{ID: categoryID}}, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			createTicketDTO: entities.CreateTicketDTO{CategoryID: categoryID, TagIDs: []uint32{2}},
 			errorExpected:   true,
@@ -169,7 +169,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 				toysRepository.
 					EXPECT().
 					GetAllCategories(gomock.Any()).Return(nil, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			createTicketDTO: entities.CreateTicketDTO{CategoryID: 2},
 			errorExpected:   true,
@@ -227,7 +227,7 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 					EXPECT().
 					GetTicketByID(gomock.Any(), ticketID).
 					Return(ticket, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			ticketID:      ticketID,
 			expected:      ticket,
@@ -243,12 +243,12 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 					EXPECT().
 					GetTicketByID(gomock.Any(), uint64(2)).
 					Return(nil, &customerrors.TicketNotFoundError{}).
-					MaxTimes(1)
+					Times(1)
 
 				logger.
 					EXPECT().
 					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
-					MaxTimes(1)
+					Times(1)
 			},
 			ticketID:      uint64(2),
 			errorExpected: true,

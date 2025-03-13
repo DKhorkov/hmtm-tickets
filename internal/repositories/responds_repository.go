@@ -3,11 +3,18 @@ package repositories
 import (
 	"context"
 
+	sq "github.com/Masterminds/squirrel"
+
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
+)
+
+const (
+	respondsTableName  = "responds"
+	masterIDColumnName = "master_id"
 )
 
 func NewRespondsRepository(
@@ -48,19 +55,26 @@ func (repo *RespondsRepository) RespondToTicket(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	var respondID uint64
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			INSERT INTO responds (ticket_id, master_id) 
-			VALUES ($1, $2)
-			RETURNING responds.id
-		`,
-		respondData.TicketID,
-		respondData.MasterID,
-	).Scan(&respondID)
+	stmt, params, err := sq.
+		Insert(respondsTableName).
+		Columns(
+			ticketIDColumnName,
+			masterIDColumnName,
+		).
+		Values(
+			respondData.TicketID,
+			respondData.MasterID,
+		).
+		Suffix(returningIDSuffix).
+		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
+		ToSql()
 
 	if err != nil {
+		return 0, err
+	}
+
+	var respondID uint64
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(&respondID); err != nil {
 		return 0, err
 	}
 
@@ -81,19 +95,20 @@ func (repo *RespondsRepository) GetRespondByID(ctx context.Context, id uint64) (
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	respond := &entities.Respond{}
-	columns := db.GetEntityColumns(respond)
-	err = connection.QueryRowContext(
-		ctx,
-		`
-			SELECT * 
-			FROM responds AS r
-			WHERE r.id = $1
-		`,
-		id,
-	).Scan(columns...)
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(respondsTableName).
+		Where(sq.Eq{idColumnName: id}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 
 	if err != nil {
+		return nil, err
+	}
+
+	respond := &entities.Respond{}
+	columns := db.GetEntityColumns(respond)
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}
 
@@ -117,14 +132,21 @@ func (repo *RespondsRepository) GetTicketResponds(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(respondsTableName).
+		Where(sq.Eq{ticketIDColumnName: ticketID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT * 
-			FROM responds AS r
-			WHERE r.ticket_id = $1
-		`,
-		ticketID,
+		stmt,
+		params...,
 	)
 
 	if err != nil {
@@ -178,14 +200,21 @@ func (repo *RespondsRepository) GetMasterResponds(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(respondsTableName).
+		Where(sq.Eq{masterIDColumnName: masterID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := connection.QueryContext(
 		ctx,
-		`
-			SELECT * 
-			FROM responds AS r
-			WHERE r.master_id = $1
-		`,
-		masterID,
+		stmt,
+		params...,
 	)
 
 	if err != nil {

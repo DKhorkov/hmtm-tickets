@@ -69,19 +69,19 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 					EXPECT().
 					RespondToTicket(gomock.Any(), respondToTicketDTO).
 					Return(respondID, nil).
-					MaxTimes(1)
+					Times(1)
 
 				respondsRepository.
 					EXPECT().
 					GetMasterResponds(gomock.Any(), masterID).
 					Return(nil, nil).
-					MaxTimes(1)
+					Times(1)
 
 				toysRepository.
 					EXPECT().
 					GetMasterByUserID(gomock.Any(), userID).
 					Return(master, nil).
-					MaxTimes(2)
+					Times(1)
 			},
 			rawRespondToTicketDTO: rawRespondToTicketDTO,
 			expected:              respondID,
@@ -94,21 +94,24 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
-				respondsRepository.
-					EXPECT().
-					RespondToTicket(gomock.Any(), entities.RespondToTicketDTO{TicketID: ticketID, MasterID: 2}).
-					Return(uint64(0), &customerrors.RespondAlreadyExistsError{}).
-					MaxTimes(1)
-
 				toysRepository.
 					EXPECT().
-					GetMasterByUserID(gomock.Any(), uint64(2)).
-					Return(nil, errMasterNotFound).
-					MaxTimes(1)
+					GetMasterByUserID(gomock.Any(), userID).
+					Return(&entities.Master{ID: masterID}, nil).
+					Times(1)
+
+				respondsRepository.
+					EXPECT().
+					GetMasterResponds(gomock.Any(), masterID).
+					Return(
+						[]entities.Respond{{TicketID: ticketID, MasterID: masterID}},
+						nil,
+					).
+					Times(1)
 			},
-			rawRespondToTicketDTO: entities.RawRespondToTicketDTO{TicketID: ticketID, UserID: 2},
+			rawRespondToTicketDTO: entities.RawRespondToTicketDTO{TicketID: ticketID, UserID: userID},
 			errorExpected:         true,
-			err:                   errMasterNotFound,
+			err:                   &customerrors.RespondAlreadyExistsError{},
 		},
 		{
 			name: "failed to respond to ticket master not found",
@@ -119,15 +122,9 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 			) {
 				toysRepository.
 					EXPECT().
-					GetMasterByUserID(gomock.Any(), uint64(2)).
-					Return(&entities.Master{ID: 2, UserID: 2}, nil).
-					MaxTimes(1)
-
-				toysRepository.
-					EXPECT().
 					GetMasterByUserID(gomock.Any(), uint64(3)).
 					Return(nil, errMasterNotFound).
-					MaxTimes(1)
+					Times(1)
 			},
 			rawRespondToTicketDTO: entities.RawRespondToTicketDTO{TicketID: ticketID, UserID: 3},
 			errorExpected:         true,
@@ -183,7 +180,7 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 					EXPECT().
 					GetRespondByID(gomock.Any(), respondID).
 					Return(respond, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			respondID:     respondID,
 			expected:      respond,
@@ -199,12 +196,12 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 					EXPECT().
 					GetRespondByID(gomock.Any(), uint64(2)).
 					Return(nil, &customerrors.RespondNotFoundError{}).
-					MaxTimes(1)
+					Times(1)
 
 				logger.
 					EXPECT().
 					ErrorContext(gomock.Any(), gomock.Any(), gomock.Any()).
-					MaxTimes(1)
+					Times(1)
 			},
 			respondID:     uint64(2),
 			errorExpected: true,
@@ -261,13 +258,13 @@ func TestRespondsService_GetUserResponds(t *testing.T) {
 					EXPECT().
 					GetMasterResponds(gomock.Any(), masterID).
 					Return([]entities.Respond{*respond}, nil).
-					MaxTimes(1)
+					Times(1)
 
 				toysRepository.
 					EXPECT().
 					GetMasterByUserID(gomock.Any(), userID).
 					Return(master, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			userID:        userID,
 			expected:      []entities.Respond{*respond},
@@ -284,7 +281,7 @@ func TestRespondsService_GetUserResponds(t *testing.T) {
 					EXPECT().
 					GetMasterByUserID(gomock.Any(), uint64(2)).
 					Return(nil, errMasterNotFound).
-					MaxTimes(1)
+					Times(1)
 			},
 			userID:        2,
 			errorExpected: true,
@@ -301,13 +298,13 @@ func TestRespondsService_GetUserResponds(t *testing.T) {
 					EXPECT().
 					GetMasterResponds(gomock.Any(), uint64(3)).
 					Return([]entities.Respond{}, nil).
-					MaxTimes(1)
+					Times(1)
 
 				toysRepository.
 					EXPECT().
 					GetMasterByUserID(gomock.Any(), uint64(3)).
 					Return(&entities.Master{ID: 3, UserID: 3}, nil).
-					MaxTimes(1)
+					Times(1)
 			},
 			userID:        3,
 			expected:      []entities.Respond{},
