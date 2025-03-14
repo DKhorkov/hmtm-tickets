@@ -173,7 +173,8 @@ func (repo *TicketsRepository) GetTicketByID(ctx context.Context, id uint64) (*e
 	}
 
 	ticket := &entities.Ticket{}
-	columns := db.GetEntityColumns(ticket)
+	columns := db.GetEntityColumns(ticket) // Only pointer to use rows.Scan() successfully
+	columns = columns[:len(columns)-2]     // Not to paste TagIDs and Attachments fields to Scan function.
 	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}

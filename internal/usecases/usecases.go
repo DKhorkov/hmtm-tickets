@@ -41,18 +41,18 @@ func (useCases *UseCases) GetUserTickets(ctx context.Context, userID uint64) ([]
 
 func (useCases *UseCases) RespondToTicket(
 	ctx context.Context,
-	respondData entities.RawRespondToTicketDTO,
+	rawRespondData entities.RawRespondToTicketDTO,
 ) (uint64, error) {
-	ticket, err := useCases.ticketsService.GetTicketByID(ctx, respondData.TicketID)
+	ticket, err := useCases.ticketsService.GetTicketByID(ctx, rawRespondData.TicketID)
 	if err != nil {
 		return 0, err
 	}
 
-	if ticket.UserID == respondData.UserID {
+	if ticket.UserID == rawRespondData.UserID {
 		return 0, &customerrors.RespondToOwnTicketError{}
 	}
 
-	return useCases.respondsService.RespondToTicket(ctx, respondData)
+	return useCases.respondsService.RespondToTicket(ctx, rawRespondData)
 }
 
 func (useCases *UseCases) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {

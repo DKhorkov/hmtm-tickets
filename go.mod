@@ -3,7 +3,7 @@ module github.com/DKhorkov/hmtm-tickets
 go 1.23.4
 
 require (
-	github.com/DKhorkov/hmtm-toys v0.0.7
+	github.com/DKhorkov/hmtm-toys v1.0.0
 	github.com/DKhorkov/libs v1.5.2
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0

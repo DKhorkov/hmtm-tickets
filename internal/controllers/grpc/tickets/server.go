@@ -37,7 +37,7 @@ func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicket
 		CategoryID:  in.GetCategoryID(),
 		Name:        in.GetName(),
 		Description: in.GetDescription(),
-		Price:       in.GetPrice(),
+		Price:       in.Price,
 		Quantity:    in.GetQuantity(),
 		TagIDs:      in.GetTagIDs(),
 		Attachments: in.GetAttachments(),

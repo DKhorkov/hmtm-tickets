@@ -8,12 +8,23 @@ type Ticket struct {
 	CategoryID  uint32       `json:"category_id"`
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
-	Price       float32      `json:"price"`
+	Price       *float32     `json:"price,omitempty"`
 	Quantity    uint32       `json:"quantity"`
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdatedAt   time.Time    `json:"updated_at"`
 	TagIDs      []uint32     `json:"tag_ids,omitempty"`
 	Attachments []Attachment `json:"attachments,omitempty"`
+}
+
+type CreateTicketDTO struct {
+	UserID      uint64   `json:"user_id"`
+	CategoryID  uint32   `json:"category_id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Price       *float32 `json:"price,omitempty"`
+	Quantity    uint32   `json:"quantity"`
+	TagIDs      []uint32 `json:"tag_ids,omitempty"`
+	Attachments []string `json:"attachments,omitempty"`
 }
 
 type Attachment struct {
@@ -22,15 +33,4 @@ type Attachment struct {
 	Link      string    `json:"link"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type CreateTicketDTO struct {
-	UserID      uint64   `json:"user_id"`
-	CategoryID  uint32   `json:"category_id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Price       float32  `json:"price"`
-	Quantity    uint32   `json:"quantity"`
-	TagIDs      []uint32 `json:"tag_ids,omitempty"`
-	Attachments []string `json:"attachments,omitempty"`
 }

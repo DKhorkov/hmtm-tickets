@@ -9,6 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	loggerMock "github.com/DKhorkov/libs/logging/mocks"
+	"github.com/DKhorkov/libs/pointers"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
@@ -29,7 +30,7 @@ var (
 		Name:        "test ticket",
 		Description: "test description",
 		Quantity:    1,
-		Price:       1,
+		Price:       pointers.New[float32](1),
 		TagIDs:      []uint32{tagID},
 	}
 	createTicketDTO = entities.CreateTicketDTO{
@@ -38,7 +39,7 @@ var (
 		Name:        "test ticket",
 		Description: "test description",
 		Quantity:    1,
-		Price:       1,
+		Price:       pointers.New[float32](1),
 		TagIDs:      []uint32{tagID},
 	}
 )

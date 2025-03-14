@@ -3,12 +3,11 @@ package repositories
 import (
 	"context"
 
-	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
-	"github.com/DKhorkov/libs/contextlib"
-	"github.com/DKhorkov/libs/requestid"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
+	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
 )
 
 func NewToysRepository(client interfaces.ToysClient) *ToysRepository {
@@ -20,12 +19,10 @@ type ToysRepository struct {
 }
 
 func (repo *ToysRepository) GetMasterByUserID(ctx context.Context, userID uint64) (*entities.Master, error) {
-	requestID, _ := contextlib.ValueFromContext[string](ctx, requestid.Key)
 	response, err := repo.client.GetMasterByUser(
 		ctx,
 		&toys.GetMasterByUserIn{
-			RequestID: requestID,
-			UserID:    userID,
+			UserID: userID,
 		},
 	)
 
@@ -43,10 +40,9 @@ func (repo *ToysRepository) GetMasterByUserID(ctx context.Context, userID uint64
 }
 
 func (repo *ToysRepository) GetAllCategories(ctx context.Context) ([]entities.Category, error) {
-	requestID, _ := contextlib.ValueFromContext[string](ctx, requestid.Key)
 	response, err := repo.client.GetCategories(
 		ctx,
-		&toys.GetCategoriesIn{RequestID: requestID},
+		&emptypb.Empty{},
 	)
 
 	if err != nil {
@@ -62,10 +58,9 @@ func (repo *ToysRepository) GetAllCategories(ctx context.Context) ([]entities.Ca
 }
 
 func (repo *ToysRepository) GetAllTags(ctx context.Context) ([]entities.Tag, error) {
-	requestID, _ := contextlib.ValueFromContext[string](ctx, requestid.Key)
 	response, err := repo.client.GetTags(
 		ctx,
-		&toys.GetTagsIn{RequestID: requestID},
+		&emptypb.Empty{},
 	)
 
 	if err != nil {

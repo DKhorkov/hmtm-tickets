@@ -31,23 +31,25 @@ type RespondsService struct {
 
 func (service *RespondsService) RespondToTicket(
 	ctx context.Context,
-	respondData entities.RawRespondToTicketDTO,
+	rawRespondData entities.RawRespondToTicketDTO,
 ) (uint64, error) {
-	master, err := service.toysRepository.GetMasterByUserID(ctx, respondData.UserID)
+	master, err := service.toysRepository.GetMasterByUserID(ctx, rawRespondData.UserID)
 	if err != nil {
 		return 0, err
 	}
 
-	processedRespondData := entities.RespondToTicketDTO{
+	respondData := entities.RespondToTicketDTO{
 		MasterID: master.ID,
-		TicketID: respondData.TicketID,
+		TicketID: rawRespondData.TicketID,
+		Price:    rawRespondData.Price,
+		Comment:  rawRespondData.Comment,
 	}
 
-	if service.checkRespondExistence(ctx, processedRespondData) {
+	if service.checkRespondExistence(ctx, respondData) {
 		return 0, &customerrors.RespondAlreadyExistsError{}
 	}
 
-	return service.respondsRepository.RespondToTicket(ctx, processedRespondData)
+	return service.respondsRepository.RespondToTicket(ctx, respondData)
 }
 
 func (service *RespondsService) checkRespondExistence(

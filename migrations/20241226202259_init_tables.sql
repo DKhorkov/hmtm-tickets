@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS tickets
     category_id INTEGER     NOT NULL,
     name        VARCHAR(50) NOT NULL,
     description TEXT,
-    price       FLOAT       NOT NULL,
+    price       FLOAT,
     quantity    INTEGER     NOT NULL,
     created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS responds
     id         SERIAL PRIMARY KEY,
     ticket_id  INTEGER   NOT NULL,
     master_id  INTEGER   NOT NULL,
+    price      FLOAT     NOT NULL,
+    comment    TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ticket_id) REFERENCES tickets (id) ON DELETE CASCADE

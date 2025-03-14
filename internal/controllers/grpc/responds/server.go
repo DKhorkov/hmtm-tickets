@@ -7,7 +7,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	customgrpc "github.com/DKhorkov/libs/grpc"
 	"github.com/DKhorkov/libs/logging"
@@ -38,6 +37,8 @@ func (api *ServerAPI) RespondToTicket(
 	respondData := entities.RawRespondToTicketDTO{
 		UserID:   in.GetUserID(),
 		TicketID: in.GetTicketID(),
+		Price:    in.GetPrice(),
+		Comment:  in.Comment,
 	}
 
 	respondID, err := api.useCases.RespondToTicket(ctx, respondData)
@@ -74,13 +75,7 @@ func (api *ServerAPI) GetRespond(ctx context.Context, in *tickets.GetRespondIn) 
 		}
 	}
 
-	return &tickets.GetRespondOut{
-		ID:        respond.ID,
-		TicketID:  respond.TicketID,
-		MasterID:  respond.MasterID,
-		CreatedAt: timestamppb.New(respond.CreatedAt),
-		UpdatedAt: timestamppb.New(respond.UpdatedAt),
-	}, nil
+	return prepareRespondOut(*respond), nil
 }
 
 // GetTicketResponds handler returns Responds for provided Ticket ID.
@@ -102,13 +97,7 @@ func (api *ServerAPI) GetTicketResponds(
 
 	processedResponds := make([]*tickets.GetRespondOut, len(ticketResponds))
 	for i, respond := range ticketResponds {
-		processedResponds[i] = &tickets.GetRespondOut{
-			ID:        respond.ID,
-			TicketID:  respond.TicketID,
-			MasterID:  respond.MasterID,
-			CreatedAt: timestamppb.New(respond.CreatedAt),
-			UpdatedAt: timestamppb.New(respond.UpdatedAt),
-		}
+		processedResponds[i] = prepareRespondOut(respond)
 	}
 
 	return &tickets.GetRespondsOut{Responds: processedResponds}, nil
@@ -133,13 +122,7 @@ func (api *ServerAPI) GetUserResponds(
 
 	processedResponds := make([]*tickets.GetRespondOut, len(userResponds))
 	for i, respond := range userResponds {
-		processedResponds[i] = &tickets.GetRespondOut{
-			ID:        respond.ID,
-			TicketID:  respond.TicketID,
-			MasterID:  respond.MasterID,
-			CreatedAt: timestamppb.New(respond.CreatedAt),
-			UpdatedAt: timestamppb.New(respond.UpdatedAt),
-		}
+		processedResponds[i] = prepareRespondOut(respond)
 	}
 
 	return &tickets.GetRespondsOut{Responds: processedResponds}, nil
