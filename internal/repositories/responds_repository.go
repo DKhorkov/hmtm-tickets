@@ -13,8 +13,10 @@ import (
 )
 
 const (
-	respondsTableName  = "responds"
-	masterIDColumnName = "master_id"
+	respondsTableName        = "responds"
+	masterIDColumnName       = "master_id"
+	respondPriceColumnName   = "price"
+	respondCommentColumnName = "comment"
 )
 
 func NewRespondsRepository(
@@ -60,10 +62,14 @@ func (repo *RespondsRepository) RespondToTicket(
 		Columns(
 			ticketIDColumnName,
 			masterIDColumnName,
+			respondPriceColumnName,
+			respondCommentColumnName,
 		).
 		Values(
 			respondData.TicketID,
 			respondData.MasterID,
+			respondData.Price,
+			respondData.Comment,
 		).
 		Suffix(returningIDSuffix).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders

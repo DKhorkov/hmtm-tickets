@@ -1,5 +1,5 @@
-github.com/DKhorkov/hmtm-toys v0.0.7 h1:SZqdCfwZJqeO5UbVrE0fQ8II8C96FPqGyxF/mOlLzrU=
-github.com/DKhorkov/hmtm-toys v0.0.7/go.mod h1:jb1fvb19o/wAB/DLswWIhnhyRglXpoVN+4JK1vOgzCw=
+github.com/DKhorkov/hmtm-toys v1.0.0 h1:2zgGrImQ/4LYgp8yBnO4DDkKWPInsdQ8/VpV4dNf1DM=
+github.com/DKhorkov/hmtm-toys v1.0.0/go.mod h1:j7IkNdJFtv5ETsSbX3kjv51po5BGIpOQk/Vwc9Q7zTY=
 github.com/DKhorkov/libs v1.5.2 h1:6DbxqSupwta5mG0b5BJJeqsmIvokCErVUmqYeGY//Xs=
 github.com/DKhorkov/libs v1.5.2/go.mod h1:bG7YLEvPSks0MJcGJLtVj1K2PmeQBU++PC9PCt9Ft0U=
 github.com/Masterminds/squirrel v1.5.4 h1:uUcX/aBc8O7Fg9kaISIUsHXdKuqehiXAMQTYX8afzqM=

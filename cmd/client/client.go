@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/DKhorkov/libs/pointers"
 	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
@@ -39,19 +40,18 @@ func main() {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), requestid.Key, requestid.New())
 
 	ticketID, err := client.CreateTicket(ctx, &tickets.CreateTicketIn{
-		UserID:      1,
+		UserID:      31,
 		CategoryID:  1,
 		TagIDs:      []uint32{1},
 		Name:        "test ticket 2",
 		Description: "test description",
-		Price:       20,
 		Quantity:    10,
 		Attachments: []string{"someref", "anotherref"},
 	})
 	fmt.Println("ticketID:", ticketID, "err:", err)
 
 	ticket, err := client.GetTicket(ctx, &tickets.GetTicketIn{
-		ID: 1,
+		ID: 2,
 	})
 	fmt.Println("ticket by ID:", ticket, "err:", err)
 
@@ -59,18 +59,20 @@ func main() {
 	fmt.Println("allTickets:", allTickets, "err:", err)
 
 	userTickets, err := client.GetUserTickets(ctx, &tickets.GetUserTicketsIn{
-		UserID: 1},
+		UserID: 31},
 	)
 	fmt.Println("userTickets:", userTickets, "err:", err)
 
 	respondsID, err := client.RespondToTicket(ctx, &tickets.RespondToTicketIn{
-		TicketID: 1,
+		TicketID: 2,
 		UserID:   1,
+		Price:    112,
+		Comment:  pointers.New[string]("test"),
 	})
 	fmt.Println("respondsID:", respondsID, "err:", err)
 
 	respond, err := client.GetRespond(ctx, &tickets.GetRespondIn{
-		ID: 1,
+		ID: 3,
 	})
 	fmt.Println("respond:", respond, "err:", err)
 
@@ -80,7 +82,7 @@ func main() {
 	fmt.Println("userResponds:", userResponds, "err:", err)
 
 	ticketResponds, err := client.GetTicketResponds(ctx, &tickets.GetTicketRespondsIn{
-		TicketID: 1,
+		TicketID: 2,
 	})
 	fmt.Println("ticketResponds:", ticketResponds, "err:", err)
 }

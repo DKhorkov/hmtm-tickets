@@ -11,7 +11,7 @@ type TicketsService interface {
 }
 
 type RespondsService interface {
-	RespondToTicket(ctx context.Context, respondData entities.RawRespondToTicketDTO) (respondID uint64, err error)
+	RespondToTicket(ctx context.Context, rawRespondData entities.RawRespondToTicketDTO) (respondID uint64, err error)
 	GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error)
 	GetTicketResponds(ctx context.Context, ticketID uint64) ([]entities.Respond, error)
 	GetUserResponds(ctx context.Context, userID uint64) ([]entities.Respond, error)

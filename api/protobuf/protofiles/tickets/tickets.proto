@@ -19,7 +19,7 @@ message CreateTicketIn {
   uint64 userID = 1;
   string name = 2;
   string description = 3;
-  float price = 4;
+  optional float price = 4;
   uint32 quantity = 5;
   uint32 categoryID = 6;
   repeated uint32 tagIDs = 7;
@@ -47,7 +47,7 @@ message GetTicketOut {
   uint64 userID = 2;
   string name = 3;
   string description = 4;
-  float price = 5;
+  optional float price = 5;
   uint32 quantity = 6;
   uint32 categoryID = 7;
   repeated uint32 tagIDs = 8;

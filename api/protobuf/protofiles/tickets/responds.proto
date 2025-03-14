@@ -17,6 +17,8 @@ service RespondsService {
 message RespondToTicketIn {
   uint64 userID = 1;
   uint64 ticketID = 2;
+  float price = 3;
+  optional string comment = 4;
 }
 
 message RespondToTicketOut {
@@ -24,21 +26,21 @@ message RespondToTicketOut {
 }
 
 message GetRespondIn {
-  uint64 userID = 1;
-  uint64 ID = 2;
+  uint64 ID = 1;
 }
 
 message GetRespondOut {
   uint64 ID = 1;
   uint64 ticketID = 2;
   uint64 masterID = 3;
-  google.protobuf.Timestamp createdAt = 9;
-  google.protobuf.Timestamp updatedAt = 10;
+  float price = 4;
+  optional string comment = 5;
+  google.protobuf.Timestamp createdAt = 6;
+  google.protobuf.Timestamp updatedAt = 7;
 }
 
 message GetTicketRespondsIn {
-  uint64 userID = 1;
-  uint64 ticketID = 2;
+  uint64 ticketID = 1;
 }
 
 message GetRespondsOut {

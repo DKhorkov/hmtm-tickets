@@ -357,9 +357,13 @@ issues:
       linters:
         - mnd
         - govet
+    - path: "internal/controllers/grpc/tickets/server.go"
+      linters:
+        - protogetter # to be able using optional fields like *string
     - path: "internal/controllers/grpc/responds/server.go"
       linters:
         - dupl
+        - protogetter # to be able using optional fields like *string
     - path: "internal/clients/toys/grpc/client.go"
       linters:
         - gosec
