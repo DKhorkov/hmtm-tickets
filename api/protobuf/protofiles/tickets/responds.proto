@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 package responds;
 
@@ -12,6 +13,8 @@ service RespondsService {
   rpc GetRespond(GetRespondIn) returns (GetRespondOut) {}
   rpc GetTicketResponds(GetTicketRespondsIn) returns (GetRespondsOut) {}
   rpc GetUserResponds(GetUserRespondsIn) returns (GetRespondsOut) {}
+  rpc UpdateRespond(UpdateRespondIn) returns (google.protobuf.Empty) {}
+  rpc DeleteRespond(DeleteRespondIn) returns (google.protobuf.Empty) {}
 }
 
 message RespondToTicketIn {
@@ -49,4 +52,14 @@ message GetRespondsOut {
 
 message GetUserRespondsIn {
   uint64 userID = 1;
+}
+
+message UpdateRespondIn {
+  uint64 ID = 1;
+  optional float price = 2;
+  optional string comment = 3;
+}
+
+message DeleteRespondIn {
+  uint64 ID = 1;
 }

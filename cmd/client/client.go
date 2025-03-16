@@ -72,7 +72,7 @@ func main() {
 	fmt.Println("respondsID:", respondsID, "err:", err)
 
 	respond, err := client.GetRespond(ctx, &tickets.GetRespondIn{
-		ID: 3,
+		ID: respondsID.GetRespondID(),
 	})
 	fmt.Println("respond:", respond, "err:", err)
 
@@ -85,4 +85,14 @@ func main() {
 		TicketID: 2,
 	})
 	fmt.Println("ticketResponds:", ticketResponds, "err:", err)
+
+	_, err = client.UpdateRespond(ctx, &tickets.UpdateRespondIn{
+		ID:      respond.GetID(),
+		Price:   pointers.New[float32](112.50),
+		Comment: pointers.New[string]("test228"),
+	})
+	fmt.Println("err:", err)
+
+	_, err = client.DeleteRespond(ctx, &tickets.DeleteRespondIn{ID: respond.GetID()})
+	fmt.Println("err:", err)
 }

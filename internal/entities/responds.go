@@ -25,3 +25,9 @@ type RawRespondToTicketDTO struct {
 	Price    float32 `json:"price"`
 	Comment  *string `json:"comment,omitempty"`
 }
+
+type UpdateRespondDTO struct {
+	ID      uint64   `json:"id"`
+	Price   *float32 `json:"price,omitempty"`
+	Comment *string  `json:"comment,omitempty"`
+}

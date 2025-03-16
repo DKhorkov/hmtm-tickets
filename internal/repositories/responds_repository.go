@@ -256,3 +256,75 @@ func (repo *RespondsRepository) GetMasterResponds(
 
 	return responds, nil
 }
+
+func (repo *RespondsRepository) UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	builder := sq.
+		Update(respondsTableName).
+		Where(sq.Eq{idColumnName: respondData.ID}).
+		Set(respondCommentColumnName, respondData.Comment). // Update every time, because field is nullable
+		PlaceholderFormat(sq.Dollar)                        // pq postgres driver works only with $ placeholders
+
+	// Price is not nullable, so update only when field is not nil:
+	if respondData.Price != nil {
+		builder = builder.Set(respondPriceColumnName, respondData.Price)
+	}
+
+	stmt, params, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = connection.ExecContext(
+		ctx,
+		stmt,
+		params...,
+	)
+
+	return err
+}
+
+func (repo *RespondsRepository) DeleteRespond(ctx context.Context, id uint64) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	stmt, params, err := sq.
+		Delete(respondsTableName).
+		Where(sq.Eq{idColumnName: id}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = connection.ExecContext(
+		ctx,
+		stmt,
+		params...,
+	)
+
+	return err
+}
