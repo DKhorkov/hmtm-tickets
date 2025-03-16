@@ -277,7 +277,7 @@ func (repo *RespondsRepository) UpdateRespond(ctx context.Context, respondData e
 		Set(respondCommentColumnName, respondData.Comment). // Update every time, because is nullable
 		PlaceholderFormat(sq.Dollar)                        // pq postgres driver works only with $ placeholders
 
-	// Price is not nullable, so update only when fields is not nil:
+	// Price is not nullable, so update only when field is not nil:
 	if respondData.Price != nil {
 		builder = builder.Set(respondPriceColumnName, respondData.Price)
 	}
