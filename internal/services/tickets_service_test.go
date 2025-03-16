@@ -2,6 +2,7 @@ package services_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,39 +50,18 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 		name       string
 		setupMocks func(
 			ticketsRepository *mockrepositories.MockTicketsRepository,
-			toysRepository *mockrepositories.MockToysRepository,
 			logger *loggerMock.MockLogger,
 		)
 		createTicketDTO entities.CreateTicketDTO
 		expected        uint64
 		errorExpected   bool
-		err             error
 	}{
 		{
 			name: "successfully created ticket",
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
-				toysRepository.
-					EXPECT().
-					GetAllCategories(gomock.Any()).
-					Return([]entities.Category{{ID: categoryID}}, nil).
-					Times(1)
-
-				toysRepository.
-					EXPECT().
-					GetAllTags(gomock.Any()).
-					Return([]entities.Tag{{ID: tagID}}, nil).
-					Times(1)
-
-				ticketsRepository.
-					EXPECT().
-					GetUserTickets(gomock.Any(), userID).
-					Return(nil, nil).
-					Times(1)
-
 				ticketsRepository.
 					EXPECT().
 					CreateTicket(gomock.Any(), createTicketDTO).
@@ -96,107 +76,34 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 			name: "fail to create ticket due to already exists",
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
-				toysRepository.
-					EXPECT().
-					GetAllCategories(gomock.Any()).
-					Return([]entities.Category{{ID: categoryID}}, nil).
-					Times(1)
-
-				toysRepository.
-					EXPECT().
-					GetAllTags(gomock.Any()).
-					Return([]entities.Tag{{ID: tagID}}, nil).
-					Times(1)
-
 				ticketsRepository.
 					EXPECT().
-					GetUserTickets(gomock.Any(), uint64(2)).
-					Return(
-						[]entities.Ticket{
-							{
-								ID:          2,
-								CategoryID:  categoryID,
-								UserID:      2,
-								Name:        "test ticket fail",
-								Description: "test description fail",
-							},
-						},
-						nil,
-					).
+					CreateTicket(gomock.Any(), createTicketDTO).
+					Return(uint64(0), errors.New("test")).
 					Times(1)
 			},
-			createTicketDTO: entities.CreateTicketDTO{
-				CategoryID:  categoryID,
-				UserID:      2,
-				Name:        "test ticket fail",
-				Description: "test description fail",
-			},
-			errorExpected: true,
-			err:           &customerrors.TicketAlreadyExistsError{},
-		},
-		{
-			name: "fail to create ticket due to tag not found",
-			setupMocks: func(
-				_ *mockrepositories.MockTicketsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
-				_ *loggerMock.MockLogger,
-			) {
-				toysRepository.
-					EXPECT().
-					GetAllTags(gomock.Any()).
-					Return(nil, nil).
-					Times(1)
-
-				toysRepository.
-					EXPECT().
-					GetAllCategories(gomock.Any()).
-					Return([]entities.Category{{ID: categoryID}}, nil).
-					Times(1)
-			},
-			createTicketDTO: entities.CreateTicketDTO{CategoryID: categoryID, TagIDs: []uint32{2}},
+			createTicketDTO: createTicketDTO,
 			errorExpected:   true,
-			err:             &customerrors.TagNotFoundError{},
-		},
-		{
-			name: "fail to create ticket due to category not found",
-			setupMocks: func(
-				_ *mockrepositories.MockTicketsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
-				_ *loggerMock.MockLogger,
-			) {
-				toysRepository.
-					EXPECT().
-					GetAllCategories(gomock.Any()).Return(nil, nil).
-					Times(1)
-			},
-			createTicketDTO: entities.CreateTicketDTO{CategoryID: 2},
-			errorExpected:   true,
-			err:             &customerrors.CategoryNotFoundError{},
 		},
 	}
 
 	mockController := gomock.NewController(t)
 	ticketsRepository := mockrepositories.NewMockTicketsRepository(mockController)
-
-	toysRepository := mockrepositories.NewMockToysRepository(mockController)
-
 	logger := loggerMock.NewMockLogger(mockController)
-	ticketsService := services.NewTicketsService(ticketsRepository, toysRepository, logger)
+	ticketsService := services.NewTicketsService(ticketsRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(ticketsRepository, toysRepository, logger)
+				tc.setupMocks(ticketsRepository, logger)
 			}
 
 			actualTicketID, err := ticketsService.CreateTicket(ctx, tc.createTicketDTO)
 			if tc.errorExpected {
 				require.Error(t, err)
-				require.IsType(t, tc.err, err)
 			} else {
 				require.NoError(t, err)
 			}
@@ -260,7 +167,7 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 	mockController := gomock.NewController(t)
 	logger := loggerMock.NewMockLogger(mockController)
 	ticketsRepository := mockrepositories.NewMockTicketsRepository(mockController)
-	ticketsService := services.NewTicketsService(ticketsRepository, nil, logger)
+	ticketsService := services.NewTicketsService(ticketsRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {

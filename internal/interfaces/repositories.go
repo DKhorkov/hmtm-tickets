@@ -20,6 +20,8 @@ type RespondsRepository interface {
 	GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error)
 	GetTicketResponds(ctx context.Context, ticketID uint64) ([]entities.Respond, error)
 	GetMasterResponds(ctx context.Context, masterID uint64) ([]entities.Respond, error)
+	UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error
+	DeleteRespond(ctx context.Context, id uint64) error
 }
 
 //go:generate mockgen -source=repositories.go  -destination=../../mocks/repositories/toys_repository.go -exclude_interfaces=RespondsRepository,TicketsRepository -package=mockrepositories

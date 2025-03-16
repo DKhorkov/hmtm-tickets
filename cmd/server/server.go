@@ -68,6 +68,12 @@ func main() {
 		panic(err)
 	}
 
+	toysRepository := repositories.NewToysRepository(toysClient)
+	toysService := services.NewToysService(
+		toysRepository,
+		logger,
+	)
+
 	ticketsRepository := repositories.NewTicketsRepository(
 		dbConnector,
 		logger,
@@ -75,10 +81,8 @@ func main() {
 		settings.Tracing.Spans.Repositories.Tickets,
 	)
 
-	toysRepository := repositories.NewToysRepository(toysClient)
 	ticketsService := services.NewTicketsService(
 		ticketsRepository,
-		toysRepository,
 		logger,
 	)
 
@@ -91,13 +95,13 @@ func main() {
 
 	respondsService := services.NewRespondsService(
 		respondsRepository,
-		toysRepository,
 		logger,
 	)
 
 	useCases := usecases.New(
 		ticketsService,
 		respondsService,
+		toysService,
 	)
 
 	controller := grpccontroller.New(

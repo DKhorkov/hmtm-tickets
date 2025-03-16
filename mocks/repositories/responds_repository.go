@@ -41,6 +41,20 @@ func (m *MockRespondsRepository) EXPECT() *MockRespondsRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteRespond mocks base method.
+func (m *MockRespondsRepository) DeleteRespond(ctx context.Context, id uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRespond", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteRespond indicates an expected call of DeleteRespond.
+func (mr *MockRespondsRepositoryMockRecorder) DeleteRespond(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRespond", reflect.TypeOf((*MockRespondsRepository)(nil).DeleteRespond), ctx, id)
+}
+
 // GetMasterResponds mocks base method.
 func (m *MockRespondsRepository) GetMasterResponds(ctx context.Context, masterID uint64) ([]entities.Respond, error) {
 	m.ctrl.T.Helper()
@@ -99,4 +113,18 @@ func (m *MockRespondsRepository) RespondToTicket(ctx context.Context, respondDat
 func (mr *MockRespondsRepositoryMockRecorder) RespondToTicket(ctx, respondData any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RespondToTicket", reflect.TypeOf((*MockRespondsRepository)(nil).RespondToTicket), ctx, respondData)
+}
+
+// UpdateRespond mocks base method.
+func (m *MockRespondsRepository) UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateRespond", ctx, respondData)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateRespond indicates an expected call of UpdateRespond.
+func (mr *MockRespondsRepositoryMockRecorder) UpdateRespond(ctx, respondData any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRespond", reflect.TypeOf((*MockRespondsRepository)(nil).UpdateRespond), ctx, respondData)
 }

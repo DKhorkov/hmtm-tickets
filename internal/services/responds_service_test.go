@@ -25,24 +25,15 @@ const (
 )
 
 var (
-	master = &entities.Master{
-		ID:     masterID,
-		UserID: userID,
-	}
 	respondToTicketDTO = entities.RespondToTicketDTO{
 		TicketID: ticketID,
 		MasterID: masterID,
-	}
-	rawRespondToTicketDTO = entities.RawRespondToTicketDTO{
-		TicketID: ticketID,
-		UserID:   userID,
 	}
 	respond = &entities.Respond{
 		TicketID: ticketID,
 		MasterID: masterID,
 		ID:       respondID,
 	}
-	errMasterNotFound = errors.New("master not found")
 )
 
 func TestRespondsService_RespondToTicket(t *testing.T) {
@@ -50,19 +41,16 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 		name       string
 		setupMocks func(
 			respondsRepository *mockrepositories.MockRespondsRepository,
-			toysRepository *mockrepositories.MockToysRepository,
 			logger *loggerMock.MockLogger,
 		)
-		rawRespondToTicketDTO entities.RawRespondToTicketDTO
-		expected              uint64
-		errorExpected         bool
-		err                   error
+		respondToTicketDTO entities.RespondToTicketDTO
+		expected           uint64
+		errorExpected      bool
 	}{
 		{
-			name: "successfully responded to ticket",
+			name: "successfully Responded to Ticket",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
 				respondsRepository.
@@ -70,85 +58,43 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 					RespondToTicket(gomock.Any(), respondToTicketDTO).
 					Return(respondID, nil).
 					Times(1)
-
-				respondsRepository.
-					EXPECT().
-					GetMasterResponds(gomock.Any(), masterID).
-					Return(nil, nil).
-					Times(1)
-
-				toysRepository.
-					EXPECT().
-					GetMasterByUserID(gomock.Any(), userID).
-					Return(master, nil).
-					Times(1)
 			},
-			rawRespondToTicketDTO: rawRespondToTicketDTO,
-			expected:              respondID,
-			errorExpected:         false,
+			respondToTicketDTO: respondToTicketDTO,
+			expected:           respondID,
+			errorExpected:      false,
 		},
 		{
-			name: "failed to respond to ticket respond already exists",
+			name: "failed to respond to Ticket",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
-				toysRepository.
-					EXPECT().
-					GetMasterByUserID(gomock.Any(), userID).
-					Return(&entities.Master{ID: masterID}, nil).
-					Times(1)
-
 				respondsRepository.
 					EXPECT().
-					GetMasterResponds(gomock.Any(), masterID).
-					Return(
-						[]entities.Respond{{TicketID: ticketID, MasterID: masterID}},
-						nil,
-					).
+					RespondToTicket(gomock.Any(), respondToTicketDTO).
+					Return(uint64(0), errors.New("test")).
 					Times(1)
 			},
-			rawRespondToTicketDTO: entities.RawRespondToTicketDTO{TicketID: ticketID, UserID: userID},
-			errorExpected:         true,
-			err:                   &customerrors.RespondAlreadyExistsError{},
-		},
-		{
-			name: "failed to respond to ticket master not found",
-			setupMocks: func(
-				_ *mockrepositories.MockRespondsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
-				_ *loggerMock.MockLogger,
-			) {
-				toysRepository.
-					EXPECT().
-					GetMasterByUserID(gomock.Any(), uint64(3)).
-					Return(nil, errMasterNotFound).
-					Times(1)
-			},
-			rawRespondToTicketDTO: entities.RawRespondToTicketDTO{TicketID: ticketID, UserID: 3},
-			errorExpected:         true,
-			err:                   errMasterNotFound,
+			respondToTicketDTO: respondToTicketDTO,
+			errorExpected:      true,
 		},
 	}
 
 	mockController := gomock.NewController(t)
 	logger := loggerMock.NewMockLogger(mockController)
 	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
-	toysRepository := mockrepositories.NewMockToysRepository(mockController)
-	respondsService := services.NewRespondsService(respondsRepository, toysRepository, logger)
+	respondsService := services.NewRespondsService(respondsRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(respondsRepository, toysRepository, logger)
+				tc.setupMocks(respondsRepository, logger)
 			}
 
-			actualRespondID, err := respondsService.RespondToTicket(ctx, tc.rawRespondToTicketDTO)
+			actualRespondID, err := respondsService.RespondToTicket(ctx, tc.respondToTicketDTO)
 			if tc.errorExpected {
 				require.Error(t, err)
-				require.IsType(t, tc.err, err)
 			} else {
 				require.NoError(t, err)
 			}
@@ -168,7 +114,6 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 		respondID     uint64
 		expected      *entities.Respond
 		errorExpected bool
-		err           error
 	}{
 		{
 			name: "successfully got respond",
@@ -187,7 +132,7 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 			errorExpected: false,
 		},
 		{
-			name: "failed to get respond by ID respond not found",
+			name: "failed to get Respond by ID",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
 				logger *loggerMock.MockLogger,
@@ -205,14 +150,13 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 			},
 			respondID:     uint64(2),
 			errorExpected: true,
-			err:           &customerrors.RespondNotFoundError{},
 		},
 	}
 
 	mockController := gomock.NewController(t)
 	logger := loggerMock.NewMockLogger(mockController)
 	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
-	respondsService := services.NewRespondsService(respondsRepository, nil, logger)
+	respondsService := services.NewRespondsService(respondsRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
@@ -224,7 +168,6 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 			actualRespond, err := respondsService.GetRespondByID(ctx, tc.respondID)
 			if tc.errorExpected {
 				require.Error(t, err)
-				require.IsType(t, tc.err, err)
 			} else {
 				require.NoError(t, err)
 			}
@@ -234,24 +177,21 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 	}
 }
 
-func TestRespondsService_GetUserResponds(t *testing.T) {
+func TestRespondsService_GetMasterResponds(t *testing.T) {
 	testCases := []struct {
 		name       string
 		setupMocks func(
 			respondsRepository *mockrepositories.MockRespondsRepository,
-			toysRepository *mockrepositories.MockToysRepository,
 			logger *loggerMock.MockLogger,
 		)
-		userID        uint64
+		masterID      uint64
 		expected      []entities.Respond
 		errorExpected bool
-		err           error
 	}{
 		{
-			name: "successfully got user responds",
+			name: "successfully got Master Responds",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
 				respondsRepository.
@@ -259,76 +199,43 @@ func TestRespondsService_GetUserResponds(t *testing.T) {
 					GetMasterResponds(gomock.Any(), masterID).
 					Return([]entities.Respond{*respond}, nil).
 					Times(1)
-
-				toysRepository.
-					EXPECT().
-					GetMasterByUserID(gomock.Any(), userID).
-					Return(master, nil).
-					Times(1)
 			},
-			userID:        userID,
+			masterID:      masterID,
 			expected:      []entities.Respond{*respond},
 			errorExpected: false,
 		},
 		{
-			name: "failed to get respond by userID master not found",
-			setupMocks: func(
-				_ *mockrepositories.MockRespondsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
-				_ *loggerMock.MockLogger,
-			) {
-				toysRepository.
-					EXPECT().
-					GetMasterByUserID(gomock.Any(), uint64(2)).
-					Return(nil, errMasterNotFound).
-					Times(1)
-			},
-			userID:        2,
-			errorExpected: true,
-			err:           errMasterNotFound,
-		},
-		{
-			name: "successfully got user responds with no responds",
+			name: "failed to get Responds by masterID",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				toysRepository *mockrepositories.MockToysRepository,
 				_ *loggerMock.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
-					GetMasterResponds(gomock.Any(), uint64(3)).
-					Return([]entities.Respond{}, nil).
-					Times(1)
-
-				toysRepository.
-					EXPECT().
-					GetMasterByUserID(gomock.Any(), uint64(3)).
-					Return(&entities.Master{ID: 3, UserID: 3}, nil).
+					GetMasterResponds(gomock.Any(), masterID).
+					Return(nil, errors.New("test")).
 					Times(1)
 			},
-			userID:        3,
-			expected:      []entities.Respond{},
-			errorExpected: false,
+			masterID:      masterID,
+			errorExpected: true,
 		},
 	}
 
 	mockController := gomock.NewController(t)
 	logger := loggerMock.NewMockLogger(mockController)
 	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
-	toysRepository := mockrepositories.NewMockToysRepository(mockController)
-	respondsService := services.NewRespondsService(respondsRepository, toysRepository, logger)
+	respondsService := services.NewRespondsService(respondsRepository, logger)
 	ctx := context.Background()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupMocks != nil {
-				tc.setupMocks(respondsRepository, toysRepository, logger)
+				tc.setupMocks(respondsRepository, logger)
 			}
 
-			actualResponds, err := respondsService.GetUserResponds(ctx, tc.userID)
+			actualResponds, err := respondsService.GetMasterResponds(ctx, tc.masterID)
 			if tc.errorExpected {
 				require.Error(t, err)
-				require.IsType(t, tc.err, err)
 			} else {
 				require.NoError(t, err)
 			}

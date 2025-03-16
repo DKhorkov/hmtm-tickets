@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
@@ -27,6 +29,56 @@ type ServerAPI struct {
 	tickets.UnimplementedRespondsServiceServer
 	useCases interfaces.UseCases
 	logger   logging.Logger
+}
+
+// UpdateRespond handler updates Respond with provided ID.
+func (api *ServerAPI) UpdateRespond(ctx context.Context, in *tickets.UpdateRespondIn) (*emptypb.Empty, error) {
+	respondData := entities.UpdateRespondDTO{
+		ID:      in.GetID(),
+		Price:   in.Price,
+		Comment: in.Comment,
+	}
+
+	err := api.useCases.UpdateRespond(ctx, respondData)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to update Respond with ID=%d", in.GetID()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.RespondNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+// DeleteRespond handler deletes Respond with provided ID.
+func (api *ServerAPI) DeleteRespond(ctx context.Context, in *tickets.DeleteRespondIn) (*emptypb.Empty, error) {
+	err := api.useCases.DeleteRespond(ctx, in.GetID())
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to delete Respond with ID=%d", in.GetID()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.RespondNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 // RespondToTicket handler creates new Respond to Ticket.

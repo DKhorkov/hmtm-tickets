@@ -13,59 +13,24 @@ import (
 
 func NewRespondsService(
 	respondsRepository interfaces.RespondsRepository,
-	toysRepository interfaces.ToysRepository,
 	logger logging.Logger,
 ) *RespondsService {
 	return &RespondsService{
 		respondsRepository: respondsRepository,
-		toysRepository:     toysRepository,
 		logger:             logger,
 	}
 }
 
 type RespondsService struct {
 	respondsRepository interfaces.RespondsRepository
-	toysRepository     interfaces.ToysRepository
 	logger             logging.Logger
 }
 
 func (service *RespondsService) RespondToTicket(
 	ctx context.Context,
-	rawRespondData entities.RawRespondToTicketDTO,
-) (uint64, error) {
-	master, err := service.toysRepository.GetMasterByUserID(ctx, rawRespondData.UserID)
-	if err != nil {
-		return 0, err
-	}
-
-	respondData := entities.RespondToTicketDTO{
-		MasterID: master.ID,
-		TicketID: rawRespondData.TicketID,
-		Price:    rawRespondData.Price,
-		Comment:  rawRespondData.Comment,
-	}
-
-	if service.checkRespondExistence(ctx, respondData) {
-		return 0, &customerrors.RespondAlreadyExistsError{}
-	}
-
-	return service.respondsRepository.RespondToTicket(ctx, respondData)
-}
-
-func (service *RespondsService) checkRespondExistence(
-	ctx context.Context,
 	respondData entities.RespondToTicketDTO,
-) bool {
-	responds, err := service.respondsRepository.GetMasterResponds(ctx, respondData.MasterID)
-	if err == nil {
-		for _, respond := range responds {
-			if respond.TicketID == respondData.TicketID {
-				return true
-			}
-		}
-	}
-
-	return false
+) (uint64, error) {
+	return service.respondsRepository.RespondToTicket(ctx, respondData)
 }
 
 func (service *RespondsService) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
@@ -84,21 +49,18 @@ func (service *RespondsService) GetRespondByID(ctx context.Context, id uint64) (
 	return respond, nil
 }
 
-func (service *RespondsService) GetTicketResponds(
-	ctx context.Context,
-	ticketID uint64,
-) ([]entities.Respond, error) {
+func (service *RespondsService) GetTicketResponds(ctx context.Context, ticketID uint64) ([]entities.Respond, error) {
 	return service.respondsRepository.GetTicketResponds(ctx, ticketID)
 }
 
-func (service *RespondsService) GetUserResponds(
-	ctx context.Context,
-	userID uint64,
-) ([]entities.Respond, error) {
-	master, err := service.toysRepository.GetMasterByUserID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
+func (service *RespondsService) GetMasterResponds(ctx context.Context, masterID uint64) ([]entities.Respond, error) {
+	return service.respondsRepository.GetMasterResponds(ctx, masterID)
+}
 
-	return service.respondsRepository.GetMasterResponds(ctx, master.ID)
+func (service *RespondsService) UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error {
+	return service.respondsRepository.UpdateRespond(ctx, respondData)
+}
+
+func (service *RespondsService) DeleteRespond(ctx context.Context, id uint64) error {
+	return service.respondsRepository.DeleteRespond(ctx, id)
 }
