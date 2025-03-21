@@ -53,7 +53,8 @@ func New() Config {
 					loadenv.GetEnvAsInt("TOYS_RETRIES_TIMEOUT", 1),
 				),
 			},
-		}, NATS: NATSConfig{
+		},
+		NATS: NATSConfig{
 			ClientURL: fmt.Sprintf(
 				"nats://%s:%d",
 				loadenv.GetEnv("NATS_HOST", "0.0.0.0"),
