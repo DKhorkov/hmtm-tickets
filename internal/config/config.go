@@ -54,6 +54,20 @@ func New() Config {
 				),
 			},
 		},
+		NATS: NATSConfig{
+			ClientURL: fmt.Sprintf(
+				"nats://%s:%d",
+				loadenv.GetEnv("NATS_HOST", "0.0.0.0"),
+				loadenv.GetEnvAsInt("NATS_CLIENT_PORT", 4222),
+			),
+			Subjects: NATSSubjects{
+				UpdateTicket: loadenv.GetEnv("NATS_UPDATE_TICKET_SUBJECT", "update-ticket"),
+				DeleteTicket: loadenv.GetEnv("NATS_DELETE_TICKET_SUBJECT", "delete-ticket"),
+			},
+			Publisher: NATSPublisher{
+				Name: loadenv.GetEnv("NATS_PUBLISHER_NAME", "hmtm-tickets-publisher"),
+			},
+		},
 		Tracing: TracingConfig{
 			Server: tracing.Config{
 				ServiceName:    loadenv.GetEnv("TRACING_SERVICE_NAME", "hmtm-tickets"),
@@ -210,6 +224,21 @@ type SpanClients struct {
 	Toys tracing.SpanConfig
 }
 
+type NATSConfig struct {
+	ClientURL string
+	Subjects  NATSSubjects
+	Publisher NATSPublisher
+}
+
+type NATSSubjects struct {
+	UpdateTicket string
+	DeleteTicket string
+}
+
+type NATSPublisher struct {
+	Name string
+}
+
 type Config struct {
 	HTTP        HTTPConfig
 	Database    db.Config
@@ -218,4 +247,5 @@ type Config struct {
 	Tracing     TracingConfig
 	Environment string
 	Version     string
+	NATS        NATSConfig
 }

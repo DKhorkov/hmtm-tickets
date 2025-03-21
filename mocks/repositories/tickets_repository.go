@@ -56,6 +56,20 @@ func (mr *MockTicketsRepositoryMockRecorder) CreateTicket(ctx, ticketData any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTicket", reflect.TypeOf((*MockTicketsRepository)(nil).CreateTicket), ctx, ticketData)
 }
 
+// DeleteTicket mocks base method.
+func (m *MockTicketsRepository) DeleteTicket(ctx context.Context, id uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTicket", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTicket indicates an expected call of DeleteTicket.
+func (mr *MockTicketsRepositoryMockRecorder) DeleteTicket(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTicket", reflect.TypeOf((*MockTicketsRepository)(nil).DeleteTicket), ctx, id)
+}
+
 // GetAllTickets mocks base method.
 func (m *MockTicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
 	m.ctrl.T.Helper()
@@ -99,4 +113,18 @@ func (m *MockTicketsRepository) GetUserTickets(ctx context.Context, userID uint6
 func (mr *MockTicketsRepositoryMockRecorder) GetUserTickets(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTickets", reflect.TypeOf((*MockTicketsRepository)(nil).GetUserTickets), ctx, userID)
+}
+
+// UpdateTicket mocks base method.
+func (m *MockTicketsRepository) UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTicket", ctx, ticketData)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTicket indicates an expected call of UpdateTicket.
+func (mr *MockTicketsRepositoryMockRecorder) UpdateTicket(ctx, ticketData any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTicket", reflect.TypeOf((*MockTicketsRepository)(nil).UpdateTicket), ctx, ticketData)
 }

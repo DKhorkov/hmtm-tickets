@@ -487,3 +487,156 @@ func (repo *TicketsRepository) GetUserTickets(ctx context.Context, userID uint64
 
 	return tickets, nil
 }
+
+func (repo *TicketsRepository) DeleteTicket(ctx context.Context, id uint64) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	stmt, params, err := sq.
+		Delete(ticketsTableName).
+		Where(sq.Eq{idColumnName: id}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = connection.ExecContext(
+		ctx,
+		stmt,
+		params...,
+	)
+
+	return err
+}
+
+func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	transaction, err := repo.dbConnector.Transaction(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Rollback transaction according Go best practises https://go.dev/doc/database/execute-transactions.
+	defer func() {
+		if err = transaction.Rollback(); err != nil {
+			logging.LogErrorContext(ctx, repo.logger, "failed to rollback db transaction", err)
+		}
+	}()
+
+	builder := sq.
+		Update(ticketsTableName).
+		Where(sq.Eq{idColumnName: ticketData.ID}).
+		Set(ticketPriceColumnName, ticketData.Price). // Update every time, because field is nullable
+		PlaceholderFormat(sq.Dollar)                  // pq postgres driver works only with $ placeholders
+
+	if ticketData.CategoryID != nil {
+		builder = builder.Set(categoryIDColumnName, ticketData.CategoryID)
+	}
+
+	if ticketData.Name != nil {
+		builder = builder.Set(ticketNameColumnName, ticketData.Name)
+	}
+
+	if ticketData.Description != nil {
+		builder = builder.Set(ticketDescriptionColumnName, ticketData.Description)
+	}
+
+	if ticketData.Quantity != nil {
+		builder = builder.Set(ticketQuantityColumnName, ticketData.Quantity)
+	}
+
+	stmt, params, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
+		return err
+	}
+
+	if len(ticketData.TagIDsToAdd) > 0 {
+		builder := sq.Insert(ticketsAndTagsAssociationTableName).Columns(ticketIDColumnName, tagIDColumnName)
+		for _, tagID := range ticketData.TagIDsToAdd {
+			builder = builder.Values(ticketData.ID, tagID)
+		}
+
+		if stmt, params, err = builder.PlaceholderFormat(sq.Dollar).ToSql(); err != nil {
+			return err
+		}
+
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
+			return err
+		}
+	}
+
+	if len(ticketData.TagIDsToDelete) > 0 {
+		stmt, params, err = sq.
+			Delete(ticketsAndTagsAssociationTableName).
+			Where(
+				sq.And{
+					sq.Eq{ticketIDColumnName: ticketData.ID},
+					sq.Eq{tagIDColumnName: ticketData.TagIDsToDelete},
+				},
+			).
+			PlaceholderFormat(sq.Dollar).
+			ToSql()
+
+		if err != nil {
+			return err
+		}
+
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
+			return err
+		}
+	}
+
+	if len(ticketData.AttachmentsToAdd) > 0 {
+		builder := sq.Insert(ticketsAttachmentsTableName).Columns(ticketIDColumnName, attachmentLinkColumnName)
+		for _, attachment := range ticketData.AttachmentsToAdd {
+			builder = builder.Values(ticketData.ID, attachment)
+		}
+
+		if stmt, params, err = builder.PlaceholderFormat(sq.Dollar).ToSql(); err != nil {
+			return err
+		}
+
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
+			return err
+		}
+	}
+
+	if len(ticketData.AttachmentIDsToDelete) > 0 {
+		stmt, params, err = sq.
+			Delete(ticketsAttachmentsTableName).
+			Where(sq.Eq{idColumnName: ticketData.AttachmentIDsToDelete}).
+			PlaceholderFormat(sq.Dollar).
+			ToSql()
+
+		if err != nil {
+			return err
+		}
+
+		if _, err = transaction.ExecContext(ctx, stmt, params...); err != nil {
+			return err
+		}
+	}
+
+	return transaction.Commit()
+}

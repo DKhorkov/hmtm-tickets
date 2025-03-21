@@ -95,4 +95,17 @@ func main() {
 
 	_, err = client.DeleteRespond(ctx, &tickets.DeleteRespondIn{ID: respond.GetID()})
 	fmt.Println("err:", err)
+
+	_, err = client.UpdateTicket(ctx, &tickets.UpdateTicketIn{
+		ID:          1,
+		CategoryID:  pointers.New[uint32](2),
+		Name:        pointers.New[string]("update ticket name"),
+		Description: pointers.New[string]("update ticket description"),
+		Price:       pointers.New[float32](123.45),
+		Quantity:    pointers.New[uint32](2),
+	})
+	fmt.Println("err:", err)
+
+	_, err = client.DeleteTicket(ctx, &tickets.DeleteTicketIn{ID: 3})
+	fmt.Println("err:", err)
 }
