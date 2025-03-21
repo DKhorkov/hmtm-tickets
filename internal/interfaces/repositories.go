@@ -12,6 +12,8 @@ type TicketsRepository interface {
 	GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error)
 	GetAllTickets(ctx context.Context) ([]entities.Ticket, error)
 	GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error)
+	DeleteTicket(ctx context.Context, id uint64) error
+	UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error
 }
 
 //go:generate mockgen -source=repositories.go  -destination=../../mocks/repositories/responds_repository.go -exclude_interfaces=TicketsRepository,ToysRepository -package=mockrepositories

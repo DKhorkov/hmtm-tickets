@@ -30,6 +30,59 @@ type ServerAPI struct {
 	logger   logging.Logger
 }
 
+// DeleteTicket handler deletes Ticket with provided ID.
+func (api *ServerAPI) DeleteTicket(ctx context.Context, in *tickets.DeleteTicketIn) (*emptypb.Empty, error) {
+	if err := api.useCases.DeleteTicket(ctx, in.GetID()); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to delete Ticket with ID=%d", in.GetID()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.TicketNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+// UpdateTicket handler updates Ticket with provided ID.
+func (api *ServerAPI) UpdateTicket(ctx context.Context, in *tickets.UpdateTicketIn) (*emptypb.Empty, error) {
+	ticketData := entities.RawUpdateTicketDTO{
+		ID:          in.GetID(),
+		CategoryID:  in.CategoryID,
+		Name:        in.Name,
+		Description: in.Description,
+		Price:       in.Price,
+		Quantity:    in.Quantity,
+		TagIDs:      in.GetTagIDs(),
+		Attachments: in.GetAttachments(),
+	}
+
+	if err := api.useCases.UpdateTicket(ctx, ticketData); err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to update Ticket with ID=%d", in.GetID()),
+			err,
+		)
+
+		switch {
+		case errors.As(err, &customerrors.TicketNotFoundError{}):
+			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
+		default:
+			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 // CreateTicket handler creates new Ticket.
 func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicketIn) (*tickets.CreateTicketOut, error) {
 	ticketData := entities.CreateTicketDTO{

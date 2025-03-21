@@ -13,6 +13,8 @@ service TicketsService {
   rpc GetTicket(GetTicketIn) returns (GetTicketOut) {}
   rpc GetTickets(google.protobuf.Empty) returns (GetTicketsOut) {}
   rpc GetUserTickets(GetUserTicketsIn) returns (GetTicketsOut) {}
+  rpc DeleteTicket(DeleteTicketIn) returns (google.protobuf.Empty) {}
+  rpc UpdateTicket(UpdateTicketIn) returns (google.protobuf.Empty) {}
 }
 
 message CreateTicketIn {
@@ -62,4 +64,19 @@ message GetTicketsOut {
 
 message GetUserTicketsIn {
   uint64 userID = 1;
+}
+
+message DeleteTicketIn {
+  uint64 ID = 1 ;
+}
+
+message UpdateTicketIn {
+  uint64 ID = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional float price = 4;
+  optional uint32 quantity = 5;
+  optional uint32 categoryID = 6;
+  repeated uint32 tagIDs = 7;
+  repeated string attachments = 8;
 }

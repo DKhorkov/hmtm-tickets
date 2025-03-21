@@ -56,3 +56,11 @@ func (service *TicketsService) GetAllTickets(ctx context.Context) ([]entities.Ti
 func (service *TicketsService) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
 	return service.ticketsRepository.GetUserTickets(ctx, userID)
 }
+
+func (service *TicketsService) DeleteTicket(ctx context.Context, id uint64) error {
+	return service.ticketsRepository.DeleteTicket(ctx, id)
+}
+
+func (service *TicketsService) UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error {
+	return service.ticketsRepository.UpdateTicket(ctx, ticketData)
+}
