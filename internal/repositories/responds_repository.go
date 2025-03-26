@@ -3,11 +3,11 @@ package repositories
 import (
 	"context"
 
-	sq "github.com/Masterminds/squirrel"
-
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
@@ -74,7 +74,6 @@ func (repo *RespondsRepository) RespondToTicket(
 		Suffix(returningIDSuffix).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return 0, err
 	}
@@ -87,7 +86,10 @@ func (repo *RespondsRepository) RespondToTicket(
 	return respondID, nil
 }
 
-func (repo *RespondsRepository) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
+func (repo *RespondsRepository) GetRespondByID(
+	ctx context.Context,
+	id uint64,
+) (*entities.Respond, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -107,7 +109,6 @@ func (repo *RespondsRepository) GetRespondByID(ctx context.Context, id uint64) (
 		Where(sq.Eq{idColumnName: id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +145,6 @@ func (repo *RespondsRepository) GetTicketResponds(
 		Where(sq.Eq{ticketIDColumnName: ticketID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,6 @@ func (repo *RespondsRepository) GetTicketResponds(
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +211,6 @@ func (repo *RespondsRepository) GetMasterResponds(
 		Where(sq.Eq{masterIDColumnName: masterID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +220,6 @@ func (repo *RespondsRepository) GetMasterResponds(
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +254,10 @@ func (repo *RespondsRepository) GetMasterResponds(
 	return responds, nil
 }
 
-func (repo *RespondsRepository) UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error {
+func (repo *RespondsRepository) UpdateRespond(
+	ctx context.Context,
+	respondData entities.UpdateRespondDTO,
+) error {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -274,8 +274,10 @@ func (repo *RespondsRepository) UpdateRespond(ctx context.Context, respondData e
 	builder := sq.
 		Update(respondsTableName).
 		Where(sq.Eq{idColumnName: respondData.ID}).
-		Set(respondCommentColumnName, respondData.Comment). // Update every time, because field is nullable
-		PlaceholderFormat(sq.Dollar)                        // pq postgres driver works only with $ placeholders
+		Set(respondCommentColumnName, respondData.Comment).
+		// Update every time, because field is nullable
+		PlaceholderFormat(sq.Dollar)
+		// pq postgres driver works only with $ placeholders
 
 	// Price is not nullable, so update only when field is not nil:
 	if respondData.Price != nil {
@@ -315,7 +317,6 @@ func (repo *RespondsRepository) DeleteRespond(ctx context.Context, id uint64) er
 		Where(sq.Eq{idColumnName: id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return err
 	}

@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 
-	sq "github.com/Masterminds/squirrel"
-
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
 	"github.com/DKhorkov/libs/tracing"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
@@ -95,7 +95,6 @@ func (repo *TicketsRepository) CreateTicket(
 		Suffix(returningIDSuffix).
 		PlaceholderFormat(sq.Dollar). // pq postgres driver works only with $ placeholders
 		ToSql()
-
 	if err != nil {
 		return 0, err
 	}
@@ -110,7 +109,8 @@ func (repo *TicketsRepository) CreateTicket(
 	}
 
 	if len(ticketData.TagIDs) > 0 {
-		builder := sq.Insert(ticketsAndTagsAssociationTableName).Columns(ticketIDColumnName, tagIDColumnName)
+		builder := sq.Insert(ticketsAndTagsAssociationTableName).
+			Columns(ticketIDColumnName, tagIDColumnName)
 		for _, tagID := range ticketData.TagIDs {
 			builder = builder.Values(ticketID, tagID)
 		}
@@ -125,7 +125,8 @@ func (repo *TicketsRepository) CreateTicket(
 	}
 
 	if len(ticketData.Attachments) > 0 {
-		builder := sq.Insert(ticketsAttachmentsTableName).Columns(ticketIDColumnName, attachmentLinkColumnName)
+		builder := sq.Insert(ticketsAttachmentsTableName).
+			Columns(ticketIDColumnName, attachmentLinkColumnName)
 		for _, attachment := range ticketData.Attachments {
 			builder = builder.Values(ticketID, attachment)
 		}
@@ -147,7 +148,10 @@ func (repo *TicketsRepository) CreateTicket(
 	return ticketID, nil
 }
 
-func (repo *TicketsRepository) GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error) {
+func (repo *TicketsRepository) GetTicketByID(
+	ctx context.Context,
+	id uint64,
+) (*entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -167,7 +171,6 @@ func (repo *TicketsRepository) GetTicketByID(ctx context.Context, id uint64) (*e
 		Where(sq.Eq{idColumnName: id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +216,6 @@ func (repo *TicketsRepository) getTicketTagsIDs(
 		Where(sq.Eq{ticketIDColumnName: ticketID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +225,6 @@ func (repo *TicketsRepository) getTicketTagsIDs(
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +275,6 @@ func (repo *TicketsRepository) getTicketAttachments(
 		Where(sq.Eq{ticketIDColumnName: ticketID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,6 @@ func (repo *TicketsRepository) getTicketAttachments(
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +337,6 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 		From(ticketsTableName).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +346,6 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +400,10 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 	return tickets, nil
 }
 
-func (repo *TicketsRepository) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
+func (repo *TicketsRepository) GetUserTickets(
+	ctx context.Context,
+	userID uint64,
+) ([]entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -423,7 +423,6 @@ func (repo *TicketsRepository) GetUserTickets(ctx context.Context, userID uint64
 		Where(sq.Eq{userIDColumnName: userID}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +432,6 @@ func (repo *TicketsRepository) GetUserTickets(ctx context.Context, userID uint64
 		stmt,
 		params...,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -507,7 +505,6 @@ func (repo *TicketsRepository) DeleteTicket(ctx context.Context, id uint64) erro
 		Where(sq.Eq{idColumnName: id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return err
 	}
@@ -521,7 +518,10 @@ func (repo *TicketsRepository) DeleteTicket(ctx context.Context, id uint64) erro
 	return err
 }
 
-func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error {
+func (repo *TicketsRepository) UpdateTicket(
+	ctx context.Context,
+	ticketData entities.UpdateTicketDTO,
+) error {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -543,8 +543,10 @@ func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData enti
 	builder := sq.
 		Update(ticketsTableName).
 		Where(sq.Eq{idColumnName: ticketData.ID}).
-		Set(ticketPriceColumnName, ticketData.Price). // Update every time, because field is nullable
-		PlaceholderFormat(sq.Dollar)                  // pq postgres driver works only with $ placeholders
+		Set(ticketPriceColumnName, ticketData.Price).
+		// Update every time, because field is nullable
+		PlaceholderFormat(sq.Dollar)
+		// pq postgres driver works only with $ placeholders
 
 	if ticketData.CategoryID != nil {
 		builder = builder.Set(categoryIDColumnName, ticketData.CategoryID)
@@ -572,7 +574,8 @@ func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData enti
 	}
 
 	if len(ticketData.TagIDsToAdd) > 0 {
-		builder := sq.Insert(ticketsAndTagsAssociationTableName).Columns(ticketIDColumnName, tagIDColumnName)
+		builder := sq.Insert(ticketsAndTagsAssociationTableName).
+			Columns(ticketIDColumnName, tagIDColumnName)
 		for _, tagID := range ticketData.TagIDsToAdd {
 			builder = builder.Values(ticketData.ID, tagID)
 		}
@@ -597,7 +600,6 @@ func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData enti
 			).
 			PlaceholderFormat(sq.Dollar).
 			ToSql()
-
 		if err != nil {
 			return err
 		}
@@ -608,7 +610,8 @@ func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData enti
 	}
 
 	if len(ticketData.AttachmentsToAdd) > 0 {
-		builder := sq.Insert(ticketsAttachmentsTableName).Columns(ticketIDColumnName, attachmentLinkColumnName)
+		builder := sq.Insert(ticketsAttachmentsTableName).
+			Columns(ticketIDColumnName, attachmentLinkColumnName)
 		for _, attachment := range ticketData.AttachmentsToAdd {
 			builder = builder.Values(ticketData.ID, attachment)
 		}
@@ -628,7 +631,6 @@ func (repo *TicketsRepository) UpdateTicket(ctx context.Context, ticketData enti
 			Where(sq.Eq{idColumnName: ticketData.AttachmentIDsToDelete}).
 			PlaceholderFormat(sq.Dollar).
 			ToSql()
-
 		if err != nil {
 			return err
 		}

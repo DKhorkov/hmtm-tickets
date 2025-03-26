@@ -53,7 +53,10 @@ func (service *ToysService) GetAllCategories(ctx context.Context) ([]entities.Ca
 	return categories, err
 }
 
-func (service *ToysService) GetMasterByUserID(ctx context.Context, userID uint64) (*entities.Master, error) {
+func (service *ToysService) GetMasterByUserID(
+	ctx context.Context,
+	userID uint64,
+) (*entities.Master, error) {
 	master, err := service.toysRepository.GetMasterByUserID(ctx, userID)
 	if err != nil {
 		logging.LogErrorContext(

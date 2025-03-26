@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/DKhorkov/libs/logging"
+	"github.com/DKhorkov/libs/tracing"
 	"google.golang.org/grpc"
 
 	customgrpc "github.com/DKhorkov/libs/grpc/interceptors"
-	"github.com/DKhorkov/libs/logging"
-	"github.com/DKhorkov/libs/tracing"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/controllers/grpc/responds"
 	"github.com/DKhorkov/hmtm-tickets/internal/controllers/grpc/tickets"

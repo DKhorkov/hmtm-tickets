@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/DKhorkov/libs/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	customgrpc "github.com/DKhorkov/libs/grpc"
-	"github.com/DKhorkov/libs/logging"
 
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
@@ -31,7 +31,10 @@ type ServerAPI struct {
 }
 
 // DeleteTicket handler deletes Ticket with provided ID.
-func (api *ServerAPI) DeleteTicket(ctx context.Context, in *tickets.DeleteTicketIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) DeleteTicket(
+	ctx context.Context,
+	in *tickets.DeleteTicketIn,
+) (*emptypb.Empty, error) {
 	if err := api.useCases.DeleteTicket(ctx, in.GetID()); err != nil {
 		logging.LogErrorContext(
 			ctx,
@@ -52,7 +55,10 @@ func (api *ServerAPI) DeleteTicket(ctx context.Context, in *tickets.DeleteTicket
 }
 
 // UpdateTicket handler updates Ticket with provided ID.
-func (api *ServerAPI) UpdateTicket(ctx context.Context, in *tickets.UpdateTicketIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) UpdateTicket(
+	ctx context.Context,
+	in *tickets.UpdateTicketIn,
+) (*emptypb.Empty, error) {
 	ticketData := entities.RawUpdateTicketDTO{
 		ID:          in.GetID(),
 		CategoryID:  in.CategoryID,
@@ -84,7 +90,10 @@ func (api *ServerAPI) UpdateTicket(ctx context.Context, in *tickets.UpdateTicket
 }
 
 // CreateTicket handler creates new Ticket.
-func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicketIn) (*tickets.CreateTicketOut, error) {
+func (api *ServerAPI) CreateTicket(
+	ctx context.Context,
+	in *tickets.CreateTicketIn,
+) (*tickets.CreateTicketOut, error) {
 	ticketData := entities.CreateTicketDTO{
 		UserID:      in.GetUserID(),
 		CategoryID:  in.GetCategoryID(),
@@ -98,7 +107,12 @@ func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicket
 
 	ticketID, err := api.useCases.CreateTicket(ctx, ticketData)
 	if err != nil {
-		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to create new Ticket", err)
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to create new Ticket",
+			err,
+		)
 
 		switch {
 		case errors.As(err, &customerrors.TicketAlreadyExistsError{}):
@@ -112,7 +126,10 @@ func (api *ServerAPI) CreateTicket(ctx context.Context, in *tickets.CreateTicket
 }
 
 // GetTicket handler returns Ticket for provided ID.
-func (api *ServerAPI) GetTicket(ctx context.Context, in *tickets.GetTicketIn) (*tickets.GetTicketOut, error) {
+func (api *ServerAPI) GetTicket(
+	ctx context.Context,
+	in *tickets.GetTicketIn,
+) (*tickets.GetTicketOut, error) {
 	ticket, err := api.useCases.GetTicketByID(ctx, in.GetID())
 	if err != nil {
 		logging.LogErrorContext(
@@ -134,10 +151,18 @@ func (api *ServerAPI) GetTicket(ctx context.Context, in *tickets.GetTicketIn) (*
 }
 
 // GetTickets handler returns all Tickets.
-func (api *ServerAPI) GetTickets(ctx context.Context, _ *emptypb.Empty) (*tickets.GetTicketsOut, error) {
+func (api *ServerAPI) GetTickets(
+	ctx context.Context,
+	_ *emptypb.Empty,
+) (*tickets.GetTicketsOut, error) {
 	allTickets, err := api.useCases.GetAllTickets(ctx)
 	if err != nil {
-		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to get all Tickets", err)
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to get all Tickets",
+			err,
+		)
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
@@ -159,7 +184,10 @@ func (api *ServerAPI) GetUserTickets(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get Tickets for User with ID=%d", in.GetUserID()),
+			fmt.Sprintf(
+				"Error occurred while trying to get Tickets for User with ID=%d",
+				in.GetUserID(),
+			),
 			err,
 		)
 

@@ -33,7 +33,10 @@ func (service *RespondsService) RespondToTicket(
 	return service.respondsRepository.RespondToTicket(ctx, respondData)
 }
 
-func (service *RespondsService) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
+func (service *RespondsService) GetRespondByID(
+	ctx context.Context,
+	id uint64,
+) (*entities.Respond, error) {
 	respond, err := service.respondsRepository.GetRespondByID(ctx, id)
 	if err != nil {
 		logging.LogErrorContext(
@@ -49,15 +52,24 @@ func (service *RespondsService) GetRespondByID(ctx context.Context, id uint64) (
 	return respond, nil
 }
 
-func (service *RespondsService) GetTicketResponds(ctx context.Context, ticketID uint64) ([]entities.Respond, error) {
+func (service *RespondsService) GetTicketResponds(
+	ctx context.Context,
+	ticketID uint64,
+) ([]entities.Respond, error) {
 	return service.respondsRepository.GetTicketResponds(ctx, ticketID)
 }
 
-func (service *RespondsService) GetMasterResponds(ctx context.Context, masterID uint64) ([]entities.Respond, error) {
+func (service *RespondsService) GetMasterResponds(
+	ctx context.Context,
+	masterID uint64,
+) ([]entities.Respond, error) {
 	return service.respondsRepository.GetMasterResponds(ctx, masterID)
 }
 
-func (service *RespondsService) UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error {
+func (service *RespondsService) UpdateRespond(
+	ctx context.Context,
+	respondData entities.UpdateRespondDTO,
+) error {
 	return service.respondsRepository.UpdateRespond(ctx, respondData)
 }
 

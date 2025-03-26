@@ -33,7 +33,10 @@ func (service *TicketsService) CreateTicket(
 	return service.ticketsRepository.CreateTicket(ctx, ticketData)
 }
 
-func (service *TicketsService) GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error) {
+func (service *TicketsService) GetTicketByID(
+	ctx context.Context,
+	id uint64,
+) (*entities.Ticket, error) {
 	ticket, err := service.ticketsRepository.GetTicketByID(ctx, id)
 	if err != nil {
 		logging.LogErrorContext(
@@ -53,7 +56,10 @@ func (service *TicketsService) GetAllTickets(ctx context.Context) ([]entities.Ti
 	return service.ticketsRepository.GetAllTickets(ctx)
 }
 
-func (service *TicketsService) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
+func (service *TicketsService) GetUserTickets(
+	ctx context.Context,
+	userID uint64,
+) ([]entities.Ticket, error) {
 	return service.ticketsRepository.GetUserTickets(ctx, userID)
 }
 
@@ -61,6 +67,9 @@ func (service *TicketsService) DeleteTicket(ctx context.Context, id uint64) erro
 	return service.ticketsRepository.DeleteTicket(ctx, id)
 }
 
-func (service *TicketsService) UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error {
+func (service *TicketsService) UpdateTicket(
+	ctx context.Context,
+	ticketData entities.UpdateTicketDTO,
+) error {
 	return service.ticketsRepository.UpdateTicket(ctx, ticketData)
 }
