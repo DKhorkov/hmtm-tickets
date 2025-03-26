@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"strconv"
 
-	notifications "github.com/DKhorkov/hmtm-notifications/dto"
 	"github.com/DKhorkov/libs/logging"
+
+	notifications "github.com/DKhorkov/hmtm-notifications/dto"
 	customnats "github.com/DKhorkov/libs/nats"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/config"
@@ -43,7 +44,10 @@ type UseCases struct {
 	logger          logging.Logger
 }
 
-func (useCases *UseCases) CreateTicket(ctx context.Context, ticketData entities.CreateTicketDTO) (uint64, error) {
+func (useCases *UseCases) CreateTicket(
+	ctx context.Context,
+	ticketData entities.CreateTicketDTO,
+) (uint64, error) {
 	if err := useCases.validateCategory(ctx, ticketData.CategoryID); err != nil {
 		return 0, err
 	}
@@ -67,7 +71,10 @@ func (useCases *UseCases) GetAllTickets(ctx context.Context) ([]entities.Ticket,
 	return useCases.ticketsService.GetAllTickets(ctx)
 }
 
-func (useCases *UseCases) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
+func (useCases *UseCases) GetUserTickets(
+	ctx context.Context,
+	userID uint64,
+) ([]entities.Ticket, error) {
 	return useCases.ticketsService.GetUserTickets(ctx, userID)
 }
 
@@ -75,7 +82,7 @@ func (useCases *UseCases) RespondToTicket(
 	ctx context.Context,
 	rawRespondData entities.RawRespondToTicketDTO,
 ) (uint64, error) {
-	ticket, err := useCases.ticketsService.GetTicketByID(ctx, rawRespondData.TicketID)
+	ticket, err := useCases.GetTicketByID(ctx, rawRespondData.TicketID)
 	if err != nil {
 		return 0, err
 	}
@@ -103,15 +110,24 @@ func (useCases *UseCases) RespondToTicket(
 	return useCases.respondsService.RespondToTicket(ctx, respondData)
 }
 
-func (useCases *UseCases) GetRespondByID(ctx context.Context, id uint64) (*entities.Respond, error) {
+func (useCases *UseCases) GetRespondByID(
+	ctx context.Context,
+	id uint64,
+) (*entities.Respond, error) {
 	return useCases.respondsService.GetRespondByID(ctx, id)
 }
 
-func (useCases *UseCases) GetTicketResponds(ctx context.Context, ticketID uint64) ([]entities.Respond, error) {
+func (useCases *UseCases) GetTicketResponds(
+	ctx context.Context,
+	ticketID uint64,
+) ([]entities.Respond, error) {
 	return useCases.respondsService.GetTicketResponds(ctx, ticketID)
 }
 
-func (useCases *UseCases) GetUserResponds(ctx context.Context, userID uint64) ([]entities.Respond, error) {
+func (useCases *UseCases) GetUserResponds(
+	ctx context.Context,
+	userID uint64,
+) ([]entities.Respond, error) {
 	master, err := useCases.toysService.GetMasterByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -159,7 +175,7 @@ func (useCases *UseCases) checkTicketExistence(
 	ctx context.Context,
 	ticketData entities.CreateTicketDTO,
 ) bool {
-	tickets, err := useCases.ticketsService.GetUserTickets(ctx, ticketData.UserID)
+	tickets, err := useCases.GetUserTickets(ctx, ticketData.UserID)
 	if err == nil {
 		for _, ticket := range tickets {
 			if ticket.Name == ticketData.Name &&
@@ -173,7 +189,10 @@ func (useCases *UseCases) checkTicketExistence(
 	return false
 }
 
-func (useCases *UseCases) checkRespondExistence(ctx context.Context, respondData entities.RespondToTicketDTO) bool {
+func (useCases *UseCases) checkRespondExistence(
+	ctx context.Context,
+	respondData entities.RespondToTicketDTO,
+) bool {
 	responds, err := useCases.respondsService.GetMasterResponds(ctx, respondData.MasterID)
 	if err == nil {
 		for _, respond := range responds {
@@ -186,8 +205,11 @@ func (useCases *UseCases) checkRespondExistence(ctx context.Context, respondData
 	return false
 }
 
-func (useCases *UseCases) UpdateRespond(ctx context.Context, respondData entities.UpdateRespondDTO) error {
-	if _, err := useCases.respondsService.GetRespondByID(ctx, respondData.ID); err != nil {
+func (useCases *UseCases) UpdateRespond(
+	ctx context.Context,
+	respondData entities.UpdateRespondDTO,
+) error {
+	if _, err := useCases.GetRespondByID(ctx, respondData.ID); err != nil {
 		return err
 	}
 
@@ -195,7 +217,7 @@ func (useCases *UseCases) UpdateRespond(ctx context.Context, respondData entitie
 }
 
 func (useCases *UseCases) DeleteRespond(ctx context.Context, id uint64) error {
-	if _, err := useCases.respondsService.GetRespondByID(ctx, id); err != nil {
+	if _, err := useCases.GetRespondByID(ctx, id); err != nil {
 		return err
 	}
 
@@ -203,12 +225,12 @@ func (useCases *UseCases) DeleteRespond(ctx context.Context, id uint64) error {
 }
 
 func (useCases *UseCases) DeleteTicket(ctx context.Context, id uint64) error {
-	ticket, err := useCases.ticketsService.GetTicketByID(ctx, id)
+	ticket, err := useCases.GetTicketByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	ticketResponds, err := useCases.respondsService.GetTicketResponds(ctx, ticket.ID)
+	ticketResponds, err := useCases.GetTicketResponds(ctx, ticket.ID)
 	if err != nil {
 		return err
 	}
@@ -266,8 +288,11 @@ func (useCases *UseCases) DeleteTicket(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (useCases *UseCases) UpdateTicket(ctx context.Context, rawTicketData entities.RawUpdateTicketDTO) error {
-	ticket, err := useCases.ticketsService.GetTicketByID(ctx, rawTicketData.ID)
+func (useCases *UseCases) UpdateTicket(
+	ctx context.Context,
+	rawTicketData entities.RawUpdateTicketDTO,
+) error {
+	ticket, err := useCases.GetTicketByID(ctx, rawTicketData.ID)
 	if err != nil {
 		return err
 	}

@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/DKhorkov/libs/pointers"
+	"github.com/DKhorkov/libs/requestid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
-
-	"github.com/DKhorkov/libs/pointers"
-	"github.com/DKhorkov/libs/requestid"
 
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 )
@@ -27,7 +26,6 @@ func main() {
 			insecure.NewCredentials(),
 		),
 	)
-
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +57,8 @@ func main() {
 	fmt.Println("allTickets:", allTickets, "err:", err)
 
 	userTickets, err := client.GetUserTickets(ctx, &tickets.GetUserTicketsIn{
-		UserID: 31},
+		UserID: 31,
+	},
 	)
 	fmt.Println("userTickets:", userTickets, "err:", err)
 

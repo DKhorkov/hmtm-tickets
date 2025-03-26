@@ -5,13 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
+	"github.com/DKhorkov/libs/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	customgrpc "github.com/DKhorkov/libs/grpc"
-	"github.com/DKhorkov/libs/logging"
 
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
@@ -21,7 +20,10 @@ import (
 
 // RegisterServer handler (serverAPI) for RespondsServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
-	tickets.RegisterRespondsServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
+	tickets.RegisterRespondsServiceServer(
+		gRPCServer,
+		&ServerAPI{useCases: useCases, logger: logger},
+	)
 }
 
 type ServerAPI struct {
@@ -32,7 +34,10 @@ type ServerAPI struct {
 }
 
 // UpdateRespond handler updates Respond with provided ID.
-func (api *ServerAPI) UpdateRespond(ctx context.Context, in *tickets.UpdateRespondIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) UpdateRespond(
+	ctx context.Context,
+	in *tickets.UpdateRespondIn,
+) (*emptypb.Empty, error) {
 	respondData := entities.UpdateRespondDTO{
 		ID:      in.GetID(),
 		Price:   in.Price,
@@ -60,7 +65,10 @@ func (api *ServerAPI) UpdateRespond(ctx context.Context, in *tickets.UpdateRespo
 }
 
 // DeleteRespond handler deletes Respond with provided ID.
-func (api *ServerAPI) DeleteRespond(ctx context.Context, in *tickets.DeleteRespondIn) (*emptypb.Empty, error) {
+func (api *ServerAPI) DeleteRespond(
+	ctx context.Context,
+	in *tickets.DeleteRespondIn,
+) (*emptypb.Empty, error) {
 	err := api.useCases.DeleteRespond(ctx, in.GetID())
 	if err != nil {
 		logging.LogErrorContext(
@@ -95,7 +103,12 @@ func (api *ServerAPI) RespondToTicket(
 
 	respondID, err := api.useCases.RespondToTicket(ctx, respondData)
 	if err != nil {
-		logging.LogErrorContext(ctx, api.logger, "Error occurred while trying to respond to Ticket", err)
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to respond to Ticket",
+			err,
+		)
 
 		switch {
 		case errors.As(err, &customerrors.RespondAlreadyExistsError{}):
@@ -109,7 +122,10 @@ func (api *ServerAPI) RespondToTicket(
 }
 
 // GetRespond handler returns Respond for provided ID.
-func (api *ServerAPI) GetRespond(ctx context.Context, in *tickets.GetRespondIn) (*tickets.GetRespondOut, error) {
+func (api *ServerAPI) GetRespond(
+	ctx context.Context,
+	in *tickets.GetRespondIn,
+) (*tickets.GetRespondOut, error) {
 	respond, err := api.useCases.GetRespondByID(ctx, in.GetID())
 	if err != nil {
 		logging.LogErrorContext(
@@ -140,7 +156,10 @@ func (api *ServerAPI) GetTicketResponds(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get Responds for Ticket with ID=%d", in.GetTicketID()),
+			fmt.Sprintf(
+				"Error occurred while trying to get Responds for Ticket with ID=%d",
+				in.GetTicketID(),
+			),
 			err,
 		)
 
@@ -165,7 +184,10 @@ func (api *ServerAPI) GetUserResponds(
 		logging.LogErrorContext(
 			ctx,
 			api.logger,
-			fmt.Sprintf("Error occurred while trying to get Responds for User with ID=%d", in.GetUserID()),
+			fmt.Sprintf(
+				"Error occurred while trying to get Responds for User with ID=%d",
+				in.GetUserID(),
+			),
 			err,
 		)
 

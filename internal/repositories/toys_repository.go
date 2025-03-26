@@ -3,11 +3,11 @@ package repositories
 import (
 	"context"
 
+	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
-	"github.com/DKhorkov/hmtm-toys/api/protobuf/generated/go/toys"
 )
 
 func NewToysRepository(client interfaces.ToysClient) *ToysRepository {
@@ -18,14 +18,16 @@ type ToysRepository struct {
 	client interfaces.ToysClient
 }
 
-func (repo *ToysRepository) GetMasterByUserID(ctx context.Context, userID uint64) (*entities.Master, error) {
+func (repo *ToysRepository) GetMasterByUserID(
+	ctx context.Context,
+	userID uint64,
+) (*entities.Master, error) {
 	response, err := repo.client.GetMasterByUser(
 		ctx,
 		&toys.GetMasterByUserIn{
 			UserID: userID,
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,6 @@ func (repo *ToysRepository) GetAllCategories(ctx context.Context) ([]entities.Ca
 		ctx,
 		&emptypb.Empty{},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,6 @@ func (repo *ToysRepository) GetAllTags(ctx context.Context) ([]entities.Tag, err
 		ctx,
 		&emptypb.Empty{},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,9 @@ func (repo *ToysRepository) processTagResponse(tagResponse *toys.GetTagOut) *ent
 	}
 }
 
-func (repo *ToysRepository) processCategoryResponse(categoryResponse *toys.GetCategoryOut) *entities.Category {
+func (repo *ToysRepository) processCategoryResponse(
+	categoryResponse *toys.GetCategoryOut,
+) *entities.Category {
 	return &entities.Category{
 		ID:   categoryResponse.GetID(),
 		Name: categoryResponse.GetName(),
