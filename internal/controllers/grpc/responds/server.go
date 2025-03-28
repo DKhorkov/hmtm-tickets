@@ -18,6 +18,11 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
+var (
+	respondNotFoundError      = &customerrors.RespondNotFoundError{}
+	respondAlreadyExistsError = &customerrors.RespondAlreadyExistsError{}
+)
+
 // RegisterServer handler (serverAPI) for RespondsServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
 	tickets.RegisterRespondsServiceServer(
@@ -54,7 +59,7 @@ func (api *ServerAPI) UpdateRespond(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.RespondNotFoundError{}):
+		case errors.As(err, &respondNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -79,7 +84,7 @@ func (api *ServerAPI) DeleteRespond(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.RespondNotFoundError{}):
+		case errors.As(err, &respondNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -111,7 +116,7 @@ func (api *ServerAPI) RespondToTicket(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.RespondAlreadyExistsError{}):
+		case errors.As(err, &respondAlreadyExistsError):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -136,7 +141,7 @@ func (api *ServerAPI) GetRespond(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.RespondNotFoundError{}):
+		case errors.As(err, &respondNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}

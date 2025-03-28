@@ -18,6 +18,13 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
+var (
+	ticketNotFoundError      = &customerrors.TicketNotFoundError{}
+	ticketAlreadyExistsError = &customerrors.TicketAlreadyExistsError{}
+	categoryNotFoundError    = &customerrors.CategoryNotFoundError{}
+	tagNotFoundError         = &customerrors.TagNotFoundError{}
+)
+
 // RegisterServer handler (serverAPI) for TicketsServer to gRPC server:.
 func RegisterServer(gRPCServer *grpc.Server, useCases interfaces.UseCases, logger logging.Logger) {
 	tickets.RegisterTicketsServiceServer(gRPCServer, &ServerAPI{useCases: useCases, logger: logger})
@@ -44,7 +51,7 @@ func (api *ServerAPI) DeleteTicket(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.TicketNotFoundError{}):
+		case errors.As(err, &ticketNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -79,7 +86,9 @@ func (api *ServerAPI) UpdateTicket(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.TicketNotFoundError{}):
+		case errors.As(err, &ticketNotFoundError),
+			errors.As(err, &categoryNotFoundError),
+			errors.As(err, &tagNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -115,7 +124,9 @@ func (api *ServerAPI) CreateTicket(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.TicketAlreadyExistsError{}):
+		case errors.As(err, &ticketAlreadyExistsError),
+			errors.As(err, &categoryNotFoundError),
+			errors.As(err, &tagNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.AlreadyExists, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
@@ -140,7 +151,7 @@ func (api *ServerAPI) GetTicket(
 		)
 
 		switch {
-		case errors.As(err, &customerrors.TicketNotFoundError{}):
+		case errors.As(err, &ticketNotFoundError):
 			return nil, &customgrpc.BaseError{Status: codes.NotFound, Message: err.Error()}
 		default:
 			return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
