@@ -7,7 +7,7 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
-func prepareRespondOut(respond entities.Respond) *tickets.GetRespondOut {
+func mapRespondOut(respond entities.Respond) *tickets.GetRespondOut {
 	return &tickets.GetRespondOut{
 		ID:        respond.ID,
 		TicketID:  respond.TicketID,

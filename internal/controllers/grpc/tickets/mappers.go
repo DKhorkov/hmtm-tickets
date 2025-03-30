@@ -7,7 +7,7 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
-func prepareTicketOut(ticket entities.Ticket) *tickets.GetTicketOut {
+func mapTicketToOut(ticket entities.Ticket) *tickets.GetTicketOut {
 	attachments := make([]*tickets.Attachment, len(ticket.Attachments))
 	for j, attachment := range ticket.Attachments {
 		attachments[j] = &tickets.Attachment{
