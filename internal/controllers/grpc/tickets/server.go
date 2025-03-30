@@ -158,7 +158,7 @@ func (api *ServerAPI) GetTicket(
 		}
 	}
 
-	return prepareTicketOut(*ticket), nil
+	return mapTicketToOut(*ticket), nil
 }
 
 // GetTickets handler returns all Tickets.
@@ -179,7 +179,7 @@ func (api *ServerAPI) GetTickets(
 
 	processedTickets := make([]*tickets.GetTicketOut, len(allTickets))
 	for i, ticket := range allTickets {
-		processedTickets[i] = prepareTicketOut(ticket)
+		processedTickets[i] = mapTicketToOut(ticket)
 	}
 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil
@@ -207,7 +207,7 @@ func (api *ServerAPI) GetUserTickets(
 
 	processedTickets := make([]*tickets.GetTicketOut, len(userTickets))
 	for i, ticket := range userTickets {
-		processedTickets[i] = prepareTicketOut(ticket)
+		processedTickets[i] = mapTicketToOut(ticket)
 	}
 
 	return &tickets.GetTicketsOut{Tickets: processedTickets}, nil

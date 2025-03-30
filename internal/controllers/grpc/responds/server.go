@@ -148,7 +148,7 @@ func (api *ServerAPI) GetRespond(
 		}
 	}
 
-	return prepareRespondOut(*respond), nil
+	return mapRespondOut(*respond), nil
 }
 
 // GetTicketResponds handler returns Responds for provided Ticket ID.
@@ -173,7 +173,7 @@ func (api *ServerAPI) GetTicketResponds(
 
 	processedResponds := make([]*tickets.GetRespondOut, len(ticketResponds))
 	for i, respond := range ticketResponds {
-		processedResponds[i] = prepareRespondOut(respond)
+		processedResponds[i] = mapRespondOut(respond)
 	}
 
 	return &tickets.GetRespondsOut{Responds: processedResponds}, nil
@@ -201,7 +201,7 @@ func (api *ServerAPI) GetUserResponds(
 
 	processedResponds := make([]*tickets.GetRespondOut, len(userResponds))
 	for i, respond := range userResponds {
-		processedResponds[i] = prepareRespondOut(respond)
+		processedResponds[i] = mapRespondOut(respond)
 	}
 
 	return &tickets.GetRespondsOut{Responds: processedResponds}, nil
