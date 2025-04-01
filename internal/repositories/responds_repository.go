@@ -114,6 +114,7 @@ func (repo *RespondsRepository) GetRespondByID(
 	}
 
 	respond := &entities.Respond{}
+
 	columns := db.GetEntityColumns(respond)
 	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
@@ -170,9 +171,11 @@ func (repo *RespondsRepository) GetTicketResponds(
 	}()
 
 	var responds []entities.Respond
+
 	for rows.Next() {
 		respond := entities.Respond{}
 		columns := db.GetEntityColumns(&respond) // Only pointer to use rows.Scan() successfully
+
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
@@ -236,9 +239,11 @@ func (repo *RespondsRepository) GetMasterResponds(
 	}()
 
 	var responds []entities.Respond
+
 	for rows.Next() {
 		respond := entities.Respond{}
 		columns := db.GetEntityColumns(&respond) // Only pointer to use rows.Scan() successfully
+
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
