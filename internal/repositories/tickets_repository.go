@@ -178,6 +178,7 @@ func (repo *TicketsRepository) GetTicketByID(
 	ticket := &entities.Ticket{}
 	columns := db.GetEntityColumns(ticket) // Only pointer to use rows.Scan() successfully
 	columns = columns[:len(columns)-2]     // Not to paste TagIDs and Attachments fields to Scan function.
+
 	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(columns...); err != nil {
 		return nil, err
 	}
@@ -241,8 +242,10 @@ func (repo *TicketsRepository) getTicketTagsIDs(
 	}()
 
 	var tagIDs []uint32
+
 	for rows.Next() {
 		var tagID uint32
+
 		err = rows.Scan(&tagID)
 		if err != nil {
 			return nil, err
@@ -300,9 +303,11 @@ func (repo *TicketsRepository) getTicketAttachments(
 	}()
 
 	var attachments []entities.Attachment
+
 	for rows.Next() {
 		var attachment entities.Attachment
 		columns := db.GetEntityColumns(&attachment) // Only pointer to use rows.Scan() successfully
+
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
@@ -362,10 +367,12 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 	}()
 
 	var tickets []entities.Ticket
+
 	for rows.Next() {
 		ticket := entities.Ticket{}
 		columns := db.GetEntityColumns(&ticket) // Only pointer to use rows.Scan() successfully
 		columns = columns[:len(columns)-2]      // Not to paste TagIDs and Attachments fields to Scan function.
+
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err
@@ -448,10 +455,12 @@ func (repo *TicketsRepository) GetUserTickets(
 	}()
 
 	var tickets []entities.Ticket
+
 	for rows.Next() {
 		ticket := entities.Ticket{}
 		columns := db.GetEntityColumns(&ticket) // Only pointer to use rows.Scan() successfully
 		columns = columns[:len(columns)-2]      // Not to paste TagIDs and Attachments fields to Scan function.
+
 		err = rows.Scan(columns...)
 		if err != nil {
 			return nil, err

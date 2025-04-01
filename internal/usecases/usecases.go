@@ -321,6 +321,7 @@ func (useCases *UseCases) UpdateTicket(
 
 	// Add new Tag if it is not already exists:
 	tagIDsToAdd := make([]uint32, 0)
+
 	for _, tagID := range rawTicketData.TagIDs {
 		if _, ok := oldTagIDsSet[tagID]; !ok {
 			tagIDsToAdd = append(tagIDsToAdd, tagID)
@@ -329,6 +330,7 @@ func (useCases *UseCases) UpdateTicket(
 
 	// Delete old Tag if it is not used by Ticket now:
 	tagIDsToDelete := make([]uint32, 0)
+
 	for _, tagID := range ticket.TagIDs {
 		if _, ok := newTagIDsSet[tagID]; !ok {
 			tagIDsToDelete = append(tagIDsToDelete, tagID)
@@ -349,6 +351,7 @@ func (useCases *UseCases) UpdateTicket(
 
 	// Add new Attachments if it is not already exists:
 	attachmentsToAdd := make([]string, 0)
+
 	for _, attachment := range rawTicketData.Attachments {
 		if _, ok := oldAttachmentsSet[attachment]; !ok {
 			attachmentsToAdd = append(attachmentsToAdd, attachment)
@@ -357,6 +360,7 @@ func (useCases *UseCases) UpdateTicket(
 
 	// Delete old Attachments if it is not used by Ticket now:
 	attachmentsToDelete := make([]uint64, 0)
+
 	for _, attachment := range ticket.Attachments {
 		if _, ok := newAttachmentsSet[attachment.Link]; !ok {
 			attachmentsToDelete = append(attachmentsToDelete, attachment.ID)

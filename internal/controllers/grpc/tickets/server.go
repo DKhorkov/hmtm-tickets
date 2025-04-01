@@ -174,6 +174,7 @@ func (api *ServerAPI) GetTickets(
 			"Error occurred while trying to get all Tickets",
 			err,
 		)
+
 		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
 	}
 
