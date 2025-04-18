@@ -19,6 +19,13 @@ const (
 	respondCommentColumnName = "comment"
 )
 
+type RespondsRepository struct {
+	dbConnector   db.Connector
+	logger        logging.Logger
+	traceProvider tracing.Provider
+	spanConfig    tracing.SpanConfig
+}
+
 func NewRespondsRepository(
 	dbConnector db.Connector,
 	logger logging.Logger,
@@ -31,13 +38,6 @@ func NewRespondsRepository(
 		traceProvider: traceProvider,
 		spanConfig:    spanConfig,
 	}
-}
-
-type RespondsRepository struct {
-	dbConnector   db.Connector
-	logger        logging.Logger
-	traceProvider tracing.Provider
-	spanConfig    tracing.SpanConfig
 }
 
 func (repo *RespondsRepository) RespondToTicket(
@@ -282,7 +282,7 @@ func (repo *RespondsRepository) UpdateRespond(
 		Set(respondCommentColumnName, respondData.Comment).
 		// Update every time, because field is nullable
 		PlaceholderFormat(sq.Dollar)
-		// pq postgres driver works only with $ placeholders
+	// pq postgres driver works only with $ placeholders
 
 	// Price is not nullable, so update only when field is not nil:
 	if respondData.Price != nil {

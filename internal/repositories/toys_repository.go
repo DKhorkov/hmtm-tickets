@@ -10,12 +10,12 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
-func NewToysRepository(client interfaces.ToysClient) *ToysRepository {
-	return &ToysRepository{client: client}
-}
-
 type ToysRepository struct {
 	client interfaces.ToysClient
+}
+
+func NewToysRepository(client interfaces.ToysClient) *ToysRepository {
+	return &ToysRepository{client: client}
 }
 
 func (repo *ToysRepository) GetMasterByUserID(

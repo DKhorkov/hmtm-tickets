@@ -11,6 +11,11 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
+type RespondsService struct {
+	respondsRepository interfaces.RespondsRepository
+	logger             logging.Logger
+}
+
 func NewRespondsService(
 	respondsRepository interfaces.RespondsRepository,
 	logger logging.Logger,
@@ -19,11 +24,6 @@ func NewRespondsService(
 		respondsRepository: respondsRepository,
 		logger:             logger,
 	}
-}
-
-type RespondsService struct {
-	respondsRepository interfaces.RespondsRepository
-	logger             logging.Logger
 }
 
 func (service *RespondsService) RespondToTicket(
