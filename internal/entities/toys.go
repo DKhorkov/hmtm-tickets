@@ -15,7 +15,7 @@ type Tag struct {
 type Master struct {
 	ID        uint64    `json:"id"`
 	UserID    uint64    `json:"userId"`
-	Info      string    `json:"info"`
+	Info      *string   `json:"info"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

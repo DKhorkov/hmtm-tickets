@@ -10,6 +10,11 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/interfaces"
 )
 
+type ToysService struct {
+	toysRepository interfaces.ToysRepository
+	logger         logging.Logger
+}
+
 func NewToysService(
 	toysRepository interfaces.ToysRepository,
 	logger logging.Logger,
@@ -18,11 +23,6 @@ func NewToysService(
 		toysRepository: toysRepository,
 		logger:         logger,
 	}
-}
-
-type ToysService struct {
-	toysRepository interfaces.ToysRepository
-	logger         logging.Logger
 }
 
 func (service *ToysService) GetAllTags(ctx context.Context) ([]entities.Tag, error) {

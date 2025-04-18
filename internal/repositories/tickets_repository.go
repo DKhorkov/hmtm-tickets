@@ -31,6 +31,13 @@ const (
 	returningIDSuffix                  = "RETURNING id"
 )
 
+type TicketsRepository struct {
+	dbConnector   db.Connector
+	logger        logging.Logger
+	traceProvider tracing.Provider
+	spanConfig    tracing.SpanConfig
+}
+
 func NewTicketsRepository(
 	dbConnector db.Connector,
 	logger logging.Logger,
@@ -43,13 +50,6 @@ func NewTicketsRepository(
 		traceProvider: traceProvider,
 		spanConfig:    spanConfig,
 	}
-}
-
-type TicketsRepository struct {
-	dbConnector   db.Connector
-	logger        logging.Logger
-	traceProvider tracing.Provider
-	spanConfig    tracing.SpanConfig
 }
 
 func (repo *TicketsRepository) CreateTicket(
@@ -198,129 +198,6 @@ func (repo *TicketsRepository) GetTicketByID(
 	ticket.Attachments = attachments
 
 	return ticket, nil
-}
-
-func (repo *TicketsRepository) getTicketTagsIDs(
-	ctx context.Context,
-	ticketID uint64,
-	connection *sql.Conn,
-) ([]uint32, error) {
-	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
-	defer span.End()
-
-	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
-	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
-
-	stmt, params, err := sq.
-		Select(tagIDColumnName).
-		From(ticketsAndTagsAssociationTableName).
-		Where(sq.Eq{ticketIDColumnName: ticketID}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := connection.QueryContext(
-		ctx,
-		stmt,
-		params...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if err = rows.Close(); err != nil {
-			logging.LogErrorContext(
-				ctx,
-				repo.logger,
-				"error during closing SQL rows",
-				err,
-			)
-		}
-	}()
-
-	var tagIDs []uint32
-
-	for rows.Next() {
-		var tagID uint32
-
-		err = rows.Scan(&tagID)
-		if err != nil {
-			return nil, err
-		}
-
-		tagIDs = append(tagIDs, tagID)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return tagIDs, err
-}
-
-func (repo *TicketsRepository) getTicketAttachments(
-	ctx context.Context,
-	ticketID uint64,
-	connection *sql.Conn,
-) ([]entities.Attachment, error) {
-	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
-	defer span.End()
-
-	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
-	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
-
-	stmt, params, err := sq.
-		Select(selectAllColumns).
-		From(ticketsAttachmentsTableName).
-		Where(sq.Eq{ticketIDColumnName: ticketID}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := connection.QueryContext(
-		ctx,
-		stmt,
-		params...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if err = rows.Close(); err != nil {
-			logging.LogErrorContext(
-				ctx,
-				repo.logger,
-				"error during closing SQL rows",
-				err,
-			)
-		}
-	}()
-
-	var attachments []entities.Attachment
-
-	for rows.Next() {
-		var attachment entities.Attachment
-		columns := db.GetEntityColumns(&attachment) // Only pointer to use rows.Scan() successfully
-
-		err = rows.Scan(columns...)
-		if err != nil {
-			return nil, err
-		}
-
-		attachments = append(attachments, attachment)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return attachments, nil
 }
 
 func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
@@ -555,7 +432,7 @@ func (repo *TicketsRepository) UpdateTicket(
 		Set(ticketPriceColumnName, ticketData.Price).
 		// Update every time, because field is nullable
 		PlaceholderFormat(sq.Dollar)
-		// pq postgres driver works only with $ placeholders
+	// pq postgres driver works only with $ placeholders
 
 	if ticketData.CategoryID != nil {
 		builder = builder.Set(categoryIDColumnName, ticketData.CategoryID)
@@ -650,4 +527,127 @@ func (repo *TicketsRepository) UpdateTicket(
 	}
 
 	return transaction.Commit()
+}
+
+func (repo *TicketsRepository) getTicketTagsIDs(
+	ctx context.Context,
+	ticketID uint64,
+	connection *sql.Conn,
+) ([]uint32, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	stmt, params, err := sq.
+		Select(tagIDColumnName).
+		From(ticketsAndTagsAssociationTableName).
+		Where(sq.Eq{ticketIDColumnName: ticketID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := connection.QueryContext(
+		ctx,
+		stmt,
+		params...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				repo.logger,
+				"error during closing SQL rows",
+				err,
+			)
+		}
+	}()
+
+	var tagIDs []uint32
+
+	for rows.Next() {
+		var tagID uint32
+
+		err = rows.Scan(&tagID)
+		if err != nil {
+			return nil, err
+		}
+
+		tagIDs = append(tagIDs, tagID)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tagIDs, err
+}
+
+func (repo *TicketsRepository) getTicketAttachments(
+	ctx context.Context,
+	ticketID uint64,
+	connection *sql.Conn,
+) ([]entities.Attachment, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	stmt, params, err := sq.
+		Select(selectAllColumns).
+		From(ticketsAttachmentsTableName).
+		Where(sq.Eq{ticketIDColumnName: ticketID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := connection.QueryContext(
+		ctx,
+		stmt,
+		params...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			logging.LogErrorContext(
+				ctx,
+				repo.logger,
+				"error during closing SQL rows",
+				err,
+			)
+		}
+	}()
+
+	var attachments []entities.Attachment
+
+	for rows.Next() {
+		var attachment entities.Attachment
+		columns := db.GetEntityColumns(&attachment) // Only pointer to use rows.Scan() successfully
+
+		err = rows.Scan(columns...)
+		if err != nil {
+			return nil, err
+		}
+
+		attachments = append(attachments, attachment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return attachments, nil
 }
