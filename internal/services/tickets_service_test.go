@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	loggerMock "github.com/DKhorkov/libs/logging/mocks"
+	mocklogger "github.com/DKhorkov/libs/logging/mocks"
 	"github.com/DKhorkov/libs/pointers"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
@@ -50,7 +50,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 		name       string
 		setupMocks func(
 			ticketsRepository *mockrepositories.MockTicketsRepository,
-			logger *loggerMock.MockLogger,
+			logger *mocklogger.MockLogger,
 		)
 		createTicketDTO entities.CreateTicketDTO
 		expected        uint64
@@ -60,7 +60,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 			name: "successfully created ticket",
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				ticketsRepository.
 					EXPECT().
@@ -76,7 +76,7 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 			name: "fail to create ticket due to already exists",
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				ticketsRepository.
 					EXPECT().
@@ -89,9 +89,9 @@ func TestTicketsService_CreateTicket(t *testing.T) {
 		},
 	}
 
-	mockController := gomock.NewController(t)
-	ticketsRepository := mockrepositories.NewMockTicketsRepository(mockController)
-	logger := loggerMock.NewMockLogger(mockController)
+	ctrl := gomock.NewController(t)
+	ticketsRepository := mockrepositories.NewMockTicketsRepository(ctrl)
+	logger := mocklogger.NewMockLogger(ctrl)
 	ticketsService := services.NewTicketsService(ticketsRepository, logger)
 	ctx := context.Background()
 
@@ -118,7 +118,7 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 		name       string
 		setupMocks func(
 			ticketsRepository *mockrepositories.MockTicketsRepository,
-			logger *loggerMock.MockLogger,
+			logger *mocklogger.MockLogger,
 		)
 		ticketID      uint64
 		expected      *entities.Ticket
@@ -129,7 +129,7 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 			name: "successfully got ticket",
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				ticketsRepository.
 					EXPECT().
@@ -145,7 +145,7 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 			name: "failed to get ticket by id ticket not found",
 			setupMocks: func(
 				ticketsRepository *mockrepositories.MockTicketsRepository,
-				logger *loggerMock.MockLogger,
+				logger *mocklogger.MockLogger,
 			) {
 				ticketsRepository.
 					EXPECT().
@@ -164,9 +164,9 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 		},
 	}
 
-	mockController := gomock.NewController(t)
-	logger := loggerMock.NewMockLogger(mockController)
-	ticketsRepository := mockrepositories.NewMockTicketsRepository(mockController)
+	ctrl := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(ctrl)
+	ticketsRepository := mockrepositories.NewMockTicketsRepository(ctrl)
 	ticketsService := services.NewTicketsService(ticketsRepository, logger)
 	ctx := context.Background()
 
@@ -185,6 +185,242 @@ func TestTicketsService_GetTicketByID(t *testing.T) {
 			}
 
 			assert.Equal(t, tc.expected, actualTicket)
+		})
+	}
+}
+
+func TestTicketsService_GetAllTickets(t *testing.T) {
+	testCases := []struct {
+		name            string
+		setupMocks      func(ticketsRepository *mockrepositories.MockTicketsRepository)
+		expectedTickets []entities.Ticket
+		errorExpected   bool
+	}{
+		{
+			name: "success",
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					GetAllTickets(gomock.Any()).
+					Return([]entities.Ticket{{ID: 1}}, nil).
+					Times(1)
+			},
+			expectedTickets: []entities.Ticket{{ID: 1}},
+			errorExpected:   false,
+		},
+		{
+			name: "repository error",
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					GetAllTickets(gomock.Any()).
+					Return(nil, errors.New("fetch failed")).
+					Times(1)
+			},
+			expectedTickets: nil,
+			errorExpected:   true,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(ctrl)
+	ticketsRepository := mockrepositories.NewMockTicketsRepository(ctrl)
+	ticketsService := services.NewTicketsService(ticketsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(ticketsRepository)
+			}
+
+			tickets, err := ticketsService.GetAllTickets(ctx)
+			if tc.errorExpected {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedTickets, tickets)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedTickets, tickets)
+			}
+		})
+	}
+}
+
+func TestTicketsService_GetUserTickets(t *testing.T) {
+	testCases := []struct {
+		name            string
+		userID          uint64
+		setupMocks      func(ticketsRepository *mockrepositories.MockTicketsRepository)
+		expectedTickets []entities.Ticket
+		errorExpected   bool
+	}{
+		{
+			name:   "success",
+			userID: 1,
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					GetUserTickets(gomock.Any(), uint64(1)).
+					Return([]entities.Ticket{{ID: 1, UserID: 1}}, nil).
+					Times(1)
+			},
+			expectedTickets: []entities.Ticket{{ID: 1, UserID: 1}},
+			errorExpected:   false,
+		},
+		{
+			name:   "repository error",
+			userID: 2,
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					GetUserTickets(gomock.Any(), uint64(2)).
+					Return(nil, errors.New("fetch failed")).
+					Times(1)
+			},
+			expectedTickets: nil,
+			errorExpected:   true,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(ctrl)
+	ticketsRepository := mockrepositories.NewMockTicketsRepository(ctrl)
+	ticketsService := services.NewTicketsService(ticketsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(ticketsRepository)
+			}
+
+			tickets, err := ticketsService.GetUserTickets(ctx, tc.userID)
+			if tc.errorExpected {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedTickets, tickets)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedTickets, tickets)
+			}
+		})
+	}
+}
+
+func TestTicketsService_DeleteTicket(t *testing.T) {
+	testCases := []struct {
+		name          string
+		id            uint64
+		setupMocks    func(ticketsRepository *mockrepositories.MockTicketsRepository)
+		errorExpected bool
+	}{
+		{
+			name: "success",
+			id:   1,
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					DeleteTicket(gomock.Any(), uint64(1)).
+					Return(nil).
+					Times(1)
+			},
+			errorExpected: false,
+		},
+		{
+			name: "repository error",
+			id:   1,
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					DeleteTicket(gomock.Any(), uint64(1)).
+					Return(errors.New("delete failed")).
+					Times(1)
+			},
+			errorExpected: true,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(ctrl)
+	ticketsRepository := mockrepositories.NewMockTicketsRepository(ctrl)
+	ticketsService := services.NewTicketsService(ticketsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(ticketsRepository)
+			}
+			err := ticketsService.DeleteTicket(ctx, tc.id)
+			if tc.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestTicketsService_UpdateTicket(t *testing.T) {
+	testCases := []struct {
+		name          string
+		ticketData    entities.UpdateTicketDTO
+		setupMocks    func(ticketsRepository *mockrepositories.MockTicketsRepository)
+		errorExpected bool
+	}{
+		{
+			name: "success",
+			ticketData: entities.UpdateTicketDTO{
+				ID:          1,
+				Name:        pointers.New("Updated Ticket"),
+				Description: pointers.New("Updated Desc"),
+			},
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					UpdateTicket(gomock.Any(), entities.UpdateTicketDTO{
+						ID:          1,
+						Name:        pointers.New("Updated Ticket"),
+						Description: pointers.New("Updated Desc"),
+					}).
+					Return(nil).
+					Times(1)
+			},
+			errorExpected: false,
+		},
+		{
+			name: "repository error",
+			ticketData: entities.UpdateTicketDTO{
+				ID: 1,
+			},
+			setupMocks: func(ticketsRepository *mockrepositories.MockTicketsRepository) {
+				ticketsRepository.
+					EXPECT().
+					UpdateTicket(gomock.Any(), entities.UpdateTicketDTO{ID: 1}).
+					Return(errors.New("update failed")).
+					Times(1)
+			},
+			errorExpected: true,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(ctrl)
+	ticketsRepository := mockrepositories.NewMockTicketsRepository(ctrl)
+	ticketsService := services.NewTicketsService(ticketsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(ticketsRepository)
+			}
+
+			err := ticketsService.UpdateTicket(ctx, tc.ticketData)
+			if tc.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

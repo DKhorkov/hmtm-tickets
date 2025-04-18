@@ -6,6 +6,7 @@ import (
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 )
 
+//go:generate mockgen -source=usecases.go -destination=../../mocks/usecases/usecases.go -package=mockusecases
 type UseCases interface {
 	// Tickets cases:
 	CreateTicket(

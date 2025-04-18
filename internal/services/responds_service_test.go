@@ -3,13 +3,14 @@ package services_test
 import (
 	"context"
 	"errors"
+	"github.com/DKhorkov/libs/pointers"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	loggerMock "github.com/DKhorkov/libs/logging/mocks"
+	mocklogger "github.com/DKhorkov/libs/logging/mocks"
 
 	"github.com/DKhorkov/hmtm-tickets/internal/entities"
 	customerrors "github.com/DKhorkov/hmtm-tickets/internal/errors"
@@ -41,7 +42,7 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 		name       string
 		setupMocks func(
 			respondsRepository *mockrepositories.MockRespondsRepository,
-			logger *loggerMock.MockLogger,
+			logger *mocklogger.MockLogger,
 		)
 		respondToTicketDTO entities.RespondToTicketDTO
 		expected           uint64
@@ -51,7 +52,7 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 			name: "successfully Responded to Ticket",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
@@ -67,7 +68,7 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 			name: "failed to respond to Ticket",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
@@ -81,7 +82,7 @@ func TestRespondsService_RespondToTicket(t *testing.T) {
 	}
 
 	mockController := gomock.NewController(t)
-	logger := loggerMock.NewMockLogger(mockController)
+	logger := mocklogger.NewMockLogger(mockController)
 	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
 	respondsService := services.NewRespondsService(respondsRepository, logger)
 	ctx := context.Background()
@@ -109,7 +110,7 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 		name       string
 		setupMocks func(
 			respondsRepository *mockrepositories.MockRespondsRepository,
-			logger *loggerMock.MockLogger,
+			logger *mocklogger.MockLogger,
 		)
 		respondID     uint64
 		expected      *entities.Respond
@@ -119,7 +120,7 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 			name: "successfully got respond",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
@@ -135,7 +136,7 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 			name: "failed to get Respond by ID",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				logger *loggerMock.MockLogger,
+				logger *mocklogger.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
@@ -154,7 +155,7 @@ func TestRespondsService_GetRespondByID(t *testing.T) {
 	}
 
 	mockController := gomock.NewController(t)
-	logger := loggerMock.NewMockLogger(mockController)
+	logger := mocklogger.NewMockLogger(mockController)
 	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
 	respondsService := services.NewRespondsService(respondsRepository, logger)
 	ctx := context.Background()
@@ -182,7 +183,7 @@ func TestRespondsService_GetMasterResponds(t *testing.T) {
 		name       string
 		setupMocks func(
 			respondsRepository *mockrepositories.MockRespondsRepository,
-			logger *loggerMock.MockLogger,
+			logger *mocklogger.MockLogger,
 		)
 		masterID      uint64
 		expected      []entities.Respond
@@ -192,7 +193,7 @@ func TestRespondsService_GetMasterResponds(t *testing.T) {
 			name: "successfully got Master Responds",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
@@ -208,7 +209,7 @@ func TestRespondsService_GetMasterResponds(t *testing.T) {
 			name: "failed to get Responds by masterID",
 			setupMocks: func(
 				respondsRepository *mockrepositories.MockRespondsRepository,
-				_ *loggerMock.MockLogger,
+				_ *mocklogger.MockLogger,
 			) {
 				respondsRepository.
 					EXPECT().
@@ -222,7 +223,7 @@ func TestRespondsService_GetMasterResponds(t *testing.T) {
 	}
 
 	mockController := gomock.NewController(t)
-	logger := loggerMock.NewMockLogger(mockController)
+	logger := mocklogger.NewMockLogger(mockController)
 	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
 	respondsService := services.NewRespondsService(respondsRepository, logger)
 	ctx := context.Background()
@@ -241,6 +242,186 @@ func TestRespondsService_GetMasterResponds(t *testing.T) {
 			}
 
 			assert.Equal(t, tc.expected, actualResponds)
+		})
+	}
+}
+
+func TestRespondsService_UpdateRespond(t *testing.T) {
+	testCases := []struct {
+		name          string
+		respondData   entities.UpdateRespondDTO
+		setupMocks    func(respondsRepository *mockrepositories.MockRespondsRepository)
+		errorExpected bool
+	}{
+		{
+			name: "success",
+			respondData: entities.UpdateRespondDTO{
+				ID:      1,
+				Price:   pointers.New[float32](200),
+				Comment: pointers.New("Updated comment"),
+			},
+			setupMocks: func(respondsRepository *mockrepositories.MockRespondsRepository) {
+				respondsRepository.
+					EXPECT().
+					UpdateRespond(gomock.Any(), entities.UpdateRespondDTO{
+						ID:      1,
+						Price:   pointers.New[float32](200),
+						Comment: pointers.New("Updated comment"),
+					}).
+					Return(nil).
+					Times(1)
+			},
+			errorExpected: false,
+		},
+		{
+			name: "repository error",
+			respondData: entities.UpdateRespondDTO{
+				ID: 1,
+			},
+			setupMocks: func(respondsRepository *mockrepositories.MockRespondsRepository) {
+				respondsRepository.
+					EXPECT().
+					UpdateRespond(gomock.Any(), entities.UpdateRespondDTO{ID: 1}).
+					Return(errors.New("update failed")).
+					Times(1)
+			},
+			errorExpected: true,
+		},
+	}
+
+	mockController := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(mockController)
+	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
+	respondsService := services.NewRespondsService(respondsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(respondsRepository)
+			}
+
+			err := respondsService.UpdateRespond(ctx, tc.respondData)
+			if tc.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestRespondsService_DeleteRespond(t *testing.T) {
+	testCases := []struct {
+		name          string
+		id            uint64
+		setupMocks    func(respondsRepository *mockrepositories.MockRespondsRepository)
+		errorExpected bool
+	}{
+		{
+			name: "success",
+			id:   1,
+			setupMocks: func(respondsRepository *mockrepositories.MockRespondsRepository) {
+				respondsRepository.
+					EXPECT().
+					DeleteRespond(gomock.Any(), uint64(1)).
+					Return(nil).
+					Times(1)
+			},
+			errorExpected: false,
+		},
+		{
+			name: "repository error",
+			id:   1,
+			setupMocks: func(respondsRepository *mockrepositories.MockRespondsRepository) {
+				respondsRepository.
+					EXPECT().
+					DeleteRespond(gomock.Any(), uint64(1)).
+					Return(errors.New("delete failed")).
+					Times(1)
+			},
+			errorExpected: true,
+		},
+	}
+
+	mockController := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(mockController)
+	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
+	respondsService := services.NewRespondsService(respondsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(respondsRepository)
+			}
+
+			err := respondsService.DeleteRespond(ctx, tc.id)
+			if tc.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestRespondsService_GetTicketResponds(t *testing.T) {
+	testCases := []struct {
+		name             string
+		ticketID         uint64
+		setupMocks       func(respondsRepository *mockrepositories.MockRespondsRepository)
+		expectedResponds []entities.Respond
+		errorExpected    bool
+	}{
+		{
+			name:     "success",
+			ticketID: 1,
+			setupMocks: func(respondsRepository *mockrepositories.MockRespondsRepository) {
+				respondsRepository.
+					EXPECT().
+					GetTicketResponds(gomock.Any(), uint64(1)).
+					Return([]entities.Respond{{ID: 1, TicketID: 1}}, nil).
+					Times(1)
+			},
+			expectedResponds: []entities.Respond{{ID: 1, TicketID: 1}},
+			errorExpected:    false,
+		},
+		{
+			name:     "repository error",
+			ticketID: 1,
+			setupMocks: func(respondsRepository *mockrepositories.MockRespondsRepository) {
+				respondsRepository.
+					EXPECT().
+					GetTicketResponds(gomock.Any(), uint64(1)).
+					Return(nil, errors.New("fetch failed")).
+					Times(1)
+			},
+			expectedResponds: nil,
+			errorExpected:    true,
+		},
+	}
+
+	mockController := gomock.NewController(t)
+	logger := mocklogger.NewMockLogger(mockController)
+	respondsRepository := mockrepositories.NewMockRespondsRepository(mockController)
+	respondsService := services.NewRespondsService(respondsRepository, logger)
+	ctx := context.Background()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(respondsRepository)
+			}
+
+			responds, err := respondsService.GetTicketResponds(ctx, tc.ticketID)
+			if tc.errorExpected {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedResponds, responds)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedResponds, responds)
+			}
 		})
 	}
 }

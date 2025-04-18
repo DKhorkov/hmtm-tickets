@@ -35,7 +35,7 @@ func (repo *ToysRepository) GetMasterByUserID(
 	return &entities.Master{
 		ID:        response.GetID(),
 		UserID:    response.GetUserID(),
-		Info:      response.GetInfo(),
+		Info:      response.Info,
 		CreatedAt: response.GetCreatedAt().AsTime(),
 		UpdatedAt: response.GetUpdatedAt().AsTime(),
 	}, nil
