@@ -175,7 +175,7 @@ func (useCases *UseCases) DeleteTicket(ctx context.Context, id uint64) error {
 		respondedMastersIDs = append(respondedMastersIDs, respond.MasterID)
 	}
 
-	deleteTicketDTO := &notifications.DeleteTicketDTO{
+	ticketDeletedDTO := &notifications.TicketDeletedDTO{
 		TicketOwnerID:       ticket.UserID,
 		Name:                ticket.Name,
 		Description:         ticket.Description,
@@ -185,7 +185,7 @@ func (useCases *UseCases) DeleteTicket(ctx context.Context, id uint64) error {
 	}
 
 	// Not returning error (if exists) from sending message, because it is not main logic and a newsletter:
-	content, err := json.Marshal(deleteTicketDTO)
+	content, err := json.Marshal(ticketDeletedDTO)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
@@ -201,7 +201,7 @@ func (useCases *UseCases) DeleteTicket(ctx context.Context, id uint64) error {
 		)
 	}
 
-	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.DeleteTicket, content); err != nil {
+	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.TicketDeleted, content); err != nil {
 		logging.LogErrorContext(
 			ctx,
 			useCases.logger,
@@ -315,12 +315,12 @@ func (useCases *UseCases) UpdateTicket(
 		return err
 	}
 
-	updateTicketDTO := &notifications.UpdateTicketDTO{
+	ticketUpdatedDTO := &notifications.TicketUpdatedDTO{
 		TicketID: ticket.ID,
 	}
 
 	// Not returning error (if exists) from sending message, because it is not main logic and a newsletter:
-	content, err := json.Marshal(updateTicketDTO)
+	content, err := json.Marshal(ticketUpdatedDTO)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
@@ -333,7 +333,7 @@ func (useCases *UseCases) UpdateTicket(
 		)
 	}
 
-	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.UpdateTicket, content); err != nil {
+	if err = useCases.natsPublisher.Publish(useCases.natsConfig.Subjects.TicketUpdated, content); err != nil {
 		logging.LogErrorContext(
 			ctx,
 			useCases.logger,
