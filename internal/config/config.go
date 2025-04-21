@@ -60,8 +60,8 @@ func New() Config {
 				loadenv.GetEnvAsInt("NATS_CLIENT_PORT", 4222),
 			),
 			Subjects: NATSSubjects{
-				UpdateTicket: loadenv.GetEnv("NATS_UPDATE_TICKET_SUBJECT", "update-ticket"),
-				DeleteTicket: loadenv.GetEnv("NATS_DELETE_TICKET_SUBJECT", "delete-ticket"),
+				TicketUpdated: loadenv.GetEnv("NATS_TICKET_UPDATED_SUBJECT", "ticket-updated"),
+				TicketDeleted: loadenv.GetEnv("NATS_TICKET_DELETED_SUBJECT", "ticket-deleted"),
 			},
 			Publisher: NATSPublisher{
 				Name: loadenv.GetEnv("NATS_PUBLISHER_NAME", "hmtm-tickets-publisher"),
@@ -263,8 +263,8 @@ type NATSConfig struct {
 }
 
 type NATSSubjects struct {
-	UpdateTicket string
-	DeleteTicket string
+	TicketUpdated string
+	TicketDeleted string
 }
 
 type NATSPublisher struct {

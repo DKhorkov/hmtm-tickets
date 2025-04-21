@@ -3,12 +3,12 @@ module github.com/DKhorkov/hmtm-tickets
 go 1.23.4
 
 require (
-	github.com/DKhorkov/hmtm-notifications v1.2.0
+	github.com/DKhorkov/hmtm-notifications v1.3.0
 	github.com/DKhorkov/hmtm-toys v1.2.0
 	github.com/DKhorkov/libs v1.7.1
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
-	github.com/mattn/go-sqlite3 v1.14.23
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/nats-io/nats.go v1.38.0
 	github.com/pressly/goose/v3 v3.24.2
 	github.com/stretchr/testify v1.10.0
