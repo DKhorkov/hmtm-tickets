@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
@@ -29,6 +30,8 @@ const (
 	userIDColumnName                   = "user_id"
 	attachmentLinkColumnName           = "link"
 	returningIDSuffix                  = "RETURNING id"
+	DESC                               = "DESC"
+	ASC                                = "ASC"
 )
 
 type TicketsRepository struct {
@@ -217,6 +220,7 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 	stmt, params, err := sq.
 		Select(selectAllColumns).
 		From(ticketsTableName).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
@@ -305,6 +309,7 @@ func (repo *TicketsRepository) GetUserTickets(
 		Select(selectAllColumns).
 		From(ticketsTableName).
 		Where(sq.Eq{userIDColumnName: userID}).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
