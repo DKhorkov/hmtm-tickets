@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
@@ -144,6 +145,7 @@ func (repo *RespondsRepository) GetTicketResponds(
 		Select(selectAllColumns).
 		From(respondsTableName).
 		Where(sq.Eq{ticketIDColumnName: ticketID}).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
@@ -212,6 +214,7 @@ func (repo *RespondsRepository) GetMasterResponds(
 		Select(selectAllColumns).
 		From(respondsTableName).
 		Where(sq.Eq{masterIDColumnName: masterID}).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
