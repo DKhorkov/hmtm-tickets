@@ -41,6 +41,36 @@ func (m *MockUseCases) EXPECT() *MockUseCasesMockRecorder {
 	return m.recorder
 }
 
+// CountTickets mocks base method.
+func (m *MockUseCases) CountTickets(ctx context.Context, filters *entities.TicketsFilters) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountTickets", ctx, filters)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountTickets indicates an expected call of CountTickets.
+func (mr *MockUseCasesMockRecorder) CountTickets(ctx, filters any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountTickets", reflect.TypeOf((*MockUseCases)(nil).CountTickets), ctx, filters)
+}
+
+// CountUserTickets mocks base method.
+func (m *MockUseCases) CountUserTickets(ctx context.Context, userID uint64, filters *entities.TicketsFilters) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountUserTickets", ctx, userID, filters)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountUserTickets indicates an expected call of CountUserTickets.
+func (mr *MockUseCasesMockRecorder) CountUserTickets(ctx, userID, filters any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountUserTickets", reflect.TypeOf((*MockUseCases)(nil).CountUserTickets), ctx, userID, filters)
+}
+
 // CreateTicket mocks base method.
 func (m *MockUseCases) CreateTicket(ctx context.Context, ticketData entities.CreateTicketDTO) (uint64, error) {
 	m.ctrl.T.Helper()
@@ -82,21 +112,6 @@ func (m *MockUseCases) DeleteTicket(ctx context.Context, id uint64) error {
 func (mr *MockUseCasesMockRecorder) DeleteTicket(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTicket", reflect.TypeOf((*MockUseCases)(nil).DeleteTicket), ctx, id)
-}
-
-// GetAllTickets mocks base method.
-func (m *MockUseCases) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllTickets", ctx)
-	ret0, _ := ret[0].([]entities.Ticket)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllTickets indicates an expected call of GetAllTickets.
-func (mr *MockUseCasesMockRecorder) GetAllTickets(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTickets", reflect.TypeOf((*MockUseCases)(nil).GetAllTickets), ctx)
 }
 
 // GetRespondByID mocks base method.
@@ -144,6 +159,21 @@ func (mr *MockUseCasesMockRecorder) GetTicketResponds(ctx, ticketID any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTicketResponds", reflect.TypeOf((*MockUseCases)(nil).GetTicketResponds), ctx, ticketID)
 }
 
+// GetTickets mocks base method.
+func (m *MockUseCases) GetTickets(ctx context.Context, pagination *entities.Pagination, filters *entities.TicketsFilters) ([]entities.Ticket, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTickets", ctx, pagination, filters)
+	ret0, _ := ret[0].([]entities.Ticket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTickets indicates an expected call of GetTickets.
+func (mr *MockUseCasesMockRecorder) GetTickets(ctx, pagination, filters any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTickets", reflect.TypeOf((*MockUseCases)(nil).GetTickets), ctx, pagination, filters)
+}
+
 // GetUserResponds mocks base method.
 func (m *MockUseCases) GetUserResponds(ctx context.Context, userID uint64) ([]entities.Respond, error) {
 	m.ctrl.T.Helper()
@@ -160,18 +190,18 @@ func (mr *MockUseCasesMockRecorder) GetUserResponds(ctx, userID any) *gomock.Cal
 }
 
 // GetUserTickets mocks base method.
-func (m *MockUseCases) GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error) {
+func (m *MockUseCases) GetUserTickets(ctx context.Context, userID uint64, pagination *entities.Pagination, filters *entities.TicketsFilters) ([]entities.Ticket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserTickets", ctx, userID)
+	ret := m.ctrl.Call(m, "GetUserTickets", ctx, userID, pagination, filters)
 	ret0, _ := ret[0].([]entities.Ticket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserTickets indicates an expected call of GetUserTickets.
-func (mr *MockUseCasesMockRecorder) GetUserTickets(ctx, userID any) *gomock.Call {
+func (mr *MockUseCasesMockRecorder) GetUserTickets(ctx, userID, pagination, filters any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTickets", reflect.TypeOf((*MockUseCases)(nil).GetUserTickets), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTickets", reflect.TypeOf((*MockUseCases)(nil).GetUserTickets), ctx, userID, pagination, filters)
 }
 
 // RespondToTicket mocks base method.

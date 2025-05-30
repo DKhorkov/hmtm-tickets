@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/DKhorkov/libs/db"
 	"github.com/DKhorkov/libs/logging"
@@ -16,6 +17,7 @@ import (
 
 const (
 	selectAllColumns                   = "*"
+	selectCount                        = "COUNT(*)"
 	ticketsTableName                   = "tickets"
 	ticketsAndTagsAssociationTableName = "tickets_tags_associations"
 	ticketsAttachmentsTableName        = "tickets_attachments"
@@ -30,8 +32,10 @@ const (
 	userIDColumnName                   = "user_id"
 	attachmentLinkColumnName           = "link"
 	returningIDSuffix                  = "RETURNING id"
-	DESC                               = "DESC"
-	ASC                                = "ASC"
+	createdAtColumnName                = "created_at"
+	updatedAtColumnName                = "updated_at"
+	desc                               = "desc"
+	asc                                = "ASC"
 )
 
 type TicketsRepository struct {
@@ -203,7 +207,11 @@ func (repo *TicketsRepository) GetTicketByID(
 	return ticket, nil
 }
 
-func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
+func (repo *TicketsRepository) GetTickets(
+	ctx context.Context,
+	pagination *entities.Pagination,
+	filters *entities.TicketsFilters,
+) ([]entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
 
@@ -217,12 +225,136 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	stmt, params, err := sq.
+	builder := sq.
 		Select(selectAllColumns).
 		From(ticketsTableName).
-		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
+		PlaceholderFormat(sq.Dollar)
+
+	if filters != nil && filters.Search != nil && *filters.Search != "" {
+		searchTerm := "%" + strings.ToLower(*filters.Search) + "%"
+		builder = builder.
+			Where(
+				sq.Or{
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketNameColumnName,
+						): searchTerm,
+					},
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketDescriptionColumnName,
+						): searchTerm,
+					},
+				},
+			)
+	}
+
+	if filters != nil && (filters.PriceFloor != nil || filters.PriceCeil != nil) {
+		priceConditions := sq.And{}
+		if filters.PriceFloor != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceFloor,
+				},
+			)
+		}
+
+		if filters.PriceCeil != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.LtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceCeil,
+				},
+			)
+		}
+
+		builder = builder.Where(priceConditions)
+	}
+
+	if filters != nil && filters.QuantityFloor != nil {
+		builder = builder.
+			Where(
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketQuantityColumnName,
+					): *filters.QuantityFloor,
+				},
+			)
+	}
+
+	if filters != nil && filters.CategoryIDs != nil {
+		builder = builder.
+			Where(
+				sq.Eq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						categoryIDColumnName,
+					): filters.CategoryIDs,
+				},
+			)
+	}
+
+	if filters != nil && len(filters.TagIDs) > 0 {
+		for _, tagID := range filters.TagIDs {
+			builder = builder.
+				Where(
+					sq.Expr(
+						fmt.Sprintf(
+							"EXISTS (SELECT 1 FROM %s WHERE %s.%s = %s.%s AND %s.%s = ?)",
+							ticketsAndTagsAssociationTableName,
+							ticketsAndTagsAssociationTableName,
+							ticketIDColumnName,
+							ticketsTableName,
+							idColumnName,
+							ticketsAndTagsAssociationTableName,
+							tagIDColumnName,
+						),
+						tagID,
+					),
+				)
+		}
+	}
+
+	createdAtOrder := desc
+	if filters != nil && filters.CreatedAtOrderByAsc != nil && *filters.CreatedAtOrderByAsc {
+		createdAtOrder = asc
+	}
+
+	builder = builder.
+		OrderBy(
+			fmt.Sprintf(
+				"%s.%s %s",
+				ticketsTableName,
+				createdAtColumnName,
+				createdAtOrder,
+			),
+		)
+
+	if pagination != nil && pagination.Limit != nil {
+		builder = builder.Limit(*pagination.Limit)
+	}
+
+	if pagination != nil && pagination.Offset != nil {
+		builder = builder.Offset(*pagination.Offset)
+	}
+
+	stmt, params, err := builder.ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -288,9 +420,145 @@ func (repo *TicketsRepository) GetAllTickets(ctx context.Context) ([]entities.Ti
 	return tickets, nil
 }
 
+func (repo *TicketsRepository) CountTickets(ctx context.Context, filters *entities.TicketsFilters) (uint64, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	builder := sq.
+		Select(selectCount).
+		From(ticketsTableName).
+		PlaceholderFormat(sq.Dollar)
+
+	if filters != nil && filters.Search != nil && *filters.Search != "" {
+		searchTerm := "%" + strings.ToLower(*filters.Search) + "%"
+		builder = builder.
+			Where(
+				sq.Or{
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketNameColumnName,
+						): searchTerm,
+					},
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketDescriptionColumnName,
+						): searchTerm,
+					},
+				},
+			)
+	}
+
+	if filters != nil && (filters.PriceFloor != nil || filters.PriceCeil != nil) {
+		priceConditions := sq.And{}
+		if filters.PriceFloor != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceFloor,
+				},
+			)
+		}
+
+		if filters.PriceCeil != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.LtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceCeil,
+				},
+			)
+		}
+
+		builder = builder.Where(priceConditions)
+	}
+
+	if filters != nil && filters.QuantityFloor != nil {
+		builder = builder.
+			Where(
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketQuantityColumnName,
+					): *filters.QuantityFloor,
+				},
+			)
+	}
+
+	if filters != nil && filters.CategoryIDs != nil {
+		builder = builder.
+			Where(
+				sq.Eq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						categoryIDColumnName,
+					): filters.CategoryIDs,
+				},
+			)
+	}
+
+	if filters != nil && len(filters.TagIDs) > 0 {
+		for _, tagID := range filters.TagIDs {
+			builder = builder.
+				Where(
+					sq.Expr(
+						fmt.Sprintf(
+							"EXISTS (SELECT 1 FROM %s WHERE %s.%s = %s.%s AND %s.%s = ?)",
+							ticketsAndTagsAssociationTableName,
+							ticketsAndTagsAssociationTableName,
+							ticketIDColumnName,
+							ticketsTableName,
+							idColumnName,
+							ticketsAndTagsAssociationTableName,
+							tagIDColumnName,
+						),
+						tagID,
+					),
+				)
+		}
+	}
+
+	// Для запросов COUNT сортировка не нужна, поэтому параметр CreatedAtOrderByAsc не используется
+	stmt, params, err := builder.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	var count uint64
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(&count); err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func (repo *TicketsRepository) GetUserTickets(
 	ctx context.Context,
 	userID uint64,
+	pagination *entities.Pagination,
+	filters *entities.TicketsFilters,
 ) ([]entities.Ticket, error) {
 	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
 	defer span.End()
@@ -305,13 +573,137 @@ func (repo *TicketsRepository) GetUserTickets(
 
 	defer db.CloseConnectionContext(ctx, connection, repo.logger)
 
-	stmt, params, err := sq.
+	builder := sq.
 		Select(selectAllColumns).
 		From(ticketsTableName).
 		Where(sq.Eq{userIDColumnName: userID}).
-		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
+		PlaceholderFormat(sq.Dollar)
+
+	if filters != nil && filters.Search != nil && *filters.Search != "" {
+		searchTerm := "%" + strings.ToLower(*filters.Search) + "%"
+		builder = builder.
+			Where(
+				sq.Or{
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketNameColumnName,
+						): searchTerm,
+					},
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketDescriptionColumnName,
+						): searchTerm,
+					},
+				},
+			)
+	}
+
+	if filters != nil && (filters.PriceFloor != nil || filters.PriceCeil != nil) {
+		priceConditions := sq.And{}
+		if filters.PriceFloor != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceFloor,
+				},
+			)
+		}
+
+		if filters.PriceCeil != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.LtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceCeil,
+				},
+			)
+		}
+
+		builder = builder.Where(priceConditions)
+	}
+
+	if filters != nil && filters.QuantityFloor != nil {
+		builder = builder.
+			Where(
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketQuantityColumnName,
+					): *filters.QuantityFloor,
+				},
+			)
+	}
+
+	if filters != nil && filters.CategoryIDs != nil {
+		builder = builder.
+			Where(
+				sq.Eq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						categoryIDColumnName,
+					): filters.CategoryIDs,
+				},
+			)
+	}
+
+	if filters != nil && len(filters.TagIDs) > 0 {
+		for _, tagID := range filters.TagIDs {
+			builder = builder.
+				Where(
+					sq.Expr(
+						fmt.Sprintf(
+							"EXISTS (SELECT 1 FROM %s WHERE %s.%s = %s.%s AND %s.%s = ?)",
+							ticketsAndTagsAssociationTableName,
+							ticketsAndTagsAssociationTableName,
+							ticketIDColumnName,
+							ticketsTableName,
+							idColumnName,
+							ticketsAndTagsAssociationTableName,
+							tagIDColumnName,
+						),
+						tagID,
+					),
+				)
+		}
+	}
+
+	createdAtOrder := desc
+	if filters != nil && filters.CreatedAtOrderByAsc != nil && *filters.CreatedAtOrderByAsc {
+		createdAtOrder = asc
+	}
+
+	builder = builder.
+		OrderBy(
+			fmt.Sprintf(
+				"%s.%s %s",
+				ticketsTableName,
+				createdAtColumnName,
+				createdAtOrder,
+			),
+		)
+
+	if pagination != nil && pagination.Limit != nil {
+		builder = builder.Limit(*pagination.Limit)
+	}
+
+	if pagination != nil && pagination.Offset != nil {
+		builder = builder.Offset(*pagination.Offset)
+	}
+
+	stmt, params, err := builder.ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -375,6 +767,145 @@ func (repo *TicketsRepository) GetUserTickets(
 	}
 
 	return tickets, nil
+}
+
+func (repo *TicketsRepository) CountUserTickets(
+	ctx context.Context,
+	userID uint64,
+	filters *entities.TicketsFilters,
+) (uint64, error) {
+	ctx, span := repo.traceProvider.Span(ctx, tracing.CallerName(tracing.DefaultSkipLevel))
+	defer span.End()
+
+	span.AddEvent(repo.spanConfig.Events.Start.Name, repo.spanConfig.Events.Start.Opts...)
+	defer span.AddEvent(repo.spanConfig.Events.End.Name, repo.spanConfig.Events.End.Opts...)
+
+	connection, err := repo.dbConnector.Connection(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	defer db.CloseConnectionContext(ctx, connection, repo.logger)
+
+	builder := sq.
+		Select(selectCount).
+		From(ticketsTableName).
+		Where(sq.Eq{userIDColumnName: userID}).
+		PlaceholderFormat(sq.Dollar)
+
+	if filters != nil && filters.Search != nil && *filters.Search != "" {
+		searchTerm := "%" + strings.ToLower(*filters.Search) + "%"
+		builder = builder.
+			Where(
+				sq.Or{
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketNameColumnName,
+						): searchTerm,
+					},
+					sq.ILike{
+						fmt.Sprintf(
+							"%s.%s",
+							ticketsTableName,
+							ticketDescriptionColumnName,
+						): searchTerm,
+					},
+				},
+			)
+	}
+
+	if filters != nil && (filters.PriceFloor != nil || filters.PriceCeil != nil) {
+		priceConditions := sq.And{}
+		if filters.PriceFloor != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceFloor,
+				},
+			)
+		}
+
+		if filters.PriceCeil != nil {
+			priceConditions = append(
+				priceConditions,
+				sq.LtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketPriceColumnName,
+					): *filters.PriceCeil,
+				},
+			)
+		}
+
+		builder = builder.Where(priceConditions)
+	}
+
+	if filters != nil && filters.QuantityFloor != nil {
+		builder = builder.
+			Where(
+				sq.GtOrEq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						ticketQuantityColumnName,
+					): *filters.QuantityFloor,
+				},
+			)
+	}
+
+	if filters != nil && filters.CategoryIDs != nil {
+		builder = builder.
+			Where(
+				sq.Eq{
+					fmt.Sprintf(
+						"%s.%s",
+						ticketsTableName,
+						categoryIDColumnName,
+					): filters.CategoryIDs,
+				},
+			)
+	}
+
+	if filters != nil && len(filters.TagIDs) > 0 {
+		for _, tagID := range filters.TagIDs {
+			builder = builder.
+				Where(
+					sq.Expr(
+						fmt.Sprintf(
+							"EXISTS (SELECT 1 FROM %s WHERE %s.%s = %s.%s AND %s.%s = ?)",
+							ticketsAndTagsAssociationTableName,
+							ticketsAndTagsAssociationTableName,
+							ticketIDColumnName,
+							ticketsTableName,
+							idColumnName,
+							ticketsAndTagsAssociationTableName,
+							tagIDColumnName,
+						),
+						tagID,
+					),
+				)
+		}
+	}
+
+	// Для запросов COUNT сортировка не нужна, поэтому параметр CreatedAtOrderByAsc не используется
+	stmt, params, err := builder.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	var count uint64
+	if err = connection.QueryRowContext(ctx, stmt, params...).Scan(&count); err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (repo *TicketsRepository) DeleteTicket(ctx context.Context, id uint64) error {

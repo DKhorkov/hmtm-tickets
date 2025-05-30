@@ -37,6 +37,64 @@ type ServerAPI struct {
 	logger   logging.Logger
 }
 
+func (api *ServerAPI) CountTickets(ctx context.Context, in *tickets.CountTicketsIn) (*tickets.CountOut, error) {
+	var filters *entities.TicketsFilters
+	if in.Filters != nil {
+		filters = &entities.TicketsFilters{
+			Search:              in.Filters.Search,
+			PriceCeil:           in.Filters.PriceCeil,
+			PriceFloor:          in.Filters.PriceFloor,
+			QuantityFloor:       in.Filters.QuantityFloor,
+			CategoryIDs:         in.Filters.CategoryIDs,
+			TagIDs:              in.Filters.TagIDs,
+			CreatedAtOrderByAsc: in.Filters.CreatedAtOrderByAsc,
+		}
+	}
+
+	count, err := api.useCases.CountTickets(ctx, filters)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			"Error occurred while trying to count Tickets",
+			err,
+		)
+
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &tickets.CountOut{Count: count}, nil
+}
+
+func (api *ServerAPI) CountUserTickets(ctx context.Context, in *tickets.CountUserTicketsIn) (*tickets.CountOut, error) {
+	var filters *entities.TicketsFilters
+	if in.Filters != nil {
+		filters = &entities.TicketsFilters{
+			Search:              in.Filters.Search,
+			PriceCeil:           in.Filters.PriceCeil,
+			PriceFloor:          in.Filters.PriceFloor,
+			QuantityFloor:       in.Filters.QuantityFloor,
+			CategoryIDs:         in.Filters.CategoryIDs,
+			TagIDs:              in.Filters.TagIDs,
+			CreatedAtOrderByAsc: in.Filters.CreatedAtOrderByAsc,
+		}
+	}
+
+	count, err := api.useCases.CountUserTickets(ctx, in.GetUserID(), filters)
+	if err != nil {
+		logging.LogErrorContext(
+			ctx,
+			api.logger,
+			fmt.Sprintf("Error occurred while trying to count Tickets for User with ID=%d", in.GetUserID()),
+			err,
+		)
+
+		return nil, &customgrpc.BaseError{Status: codes.Internal, Message: err.Error()}
+	}
+
+	return &tickets.CountOut{Count: count}, nil
+}
+
 // DeleteTicket handler deletes Ticket with provided ID.
 func (api *ServerAPI) DeleteTicket(
 	ctx context.Context,
@@ -164,9 +222,30 @@ func (api *ServerAPI) GetTicket(
 // GetTickets handler returns all Tickets.
 func (api *ServerAPI) GetTickets(
 	ctx context.Context,
-	_ *emptypb.Empty,
+	in *tickets.GetTicketsIn,
 ) (*tickets.GetTicketsOut, error) {
-	allTickets, err := api.useCases.GetAllTickets(ctx)
+	var filters *entities.TicketsFilters
+	if in.Filters != nil {
+		filters = &entities.TicketsFilters{
+			Search:              in.Filters.Search,
+			PriceCeil:           in.Filters.PriceCeil,
+			PriceFloor:          in.Filters.PriceFloor,
+			QuantityFloor:       in.Filters.QuantityFloor,
+			CategoryIDs:         in.Filters.CategoryIDs,
+			TagIDs:              in.Filters.TagIDs,
+			CreatedAtOrderByAsc: in.Filters.CreatedAtOrderByAsc,
+		}
+	}
+
+	var pagination *entities.Pagination
+	if in.Pagination != nil {
+		pagination = &entities.Pagination{
+			Limit:  in.Pagination.Limit,
+			Offset: in.Pagination.Offset,
+		}
+	}
+
+	allTickets, err := api.useCases.GetTickets(ctx, pagination, filters)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,
@@ -191,7 +270,28 @@ func (api *ServerAPI) GetUserTickets(
 	ctx context.Context,
 	in *tickets.GetUserTicketsIn,
 ) (*tickets.GetTicketsOut, error) {
-	userTickets, err := api.useCases.GetUserTickets(ctx, in.GetUserID())
+	var filters *entities.TicketsFilters
+	if in.Filters != nil {
+		filters = &entities.TicketsFilters{
+			Search:              in.Filters.Search,
+			PriceCeil:           in.Filters.PriceCeil,
+			PriceFloor:          in.Filters.PriceFloor,
+			QuantityFloor:       in.Filters.QuantityFloor,
+			CategoryIDs:         in.Filters.CategoryIDs,
+			TagIDs:              in.Filters.TagIDs,
+			CreatedAtOrderByAsc: in.Filters.CreatedAtOrderByAsc,
+		}
+	}
+
+	var pagination *entities.Pagination
+	if in.Pagination != nil {
+		pagination = &entities.Pagination{
+			Limit:  in.Pagination.Limit,
+			Offset: in.Pagination.Offset,
+		}
+	}
+
+	userTickets, err := api.useCases.GetUserTickets(ctx, in.GetUserID(), pagination, filters)
 	if err != nil {
 		logging.LogErrorContext(
 			ctx,

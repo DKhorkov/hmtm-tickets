@@ -90,6 +90,8 @@ linters:
           - funlen
           - gocognit
           - dupl
+          - gocyclo
+          - maintidx
       - path: "internal/services/responds_service_test.go"
         linters:
           - gochecknoglobals

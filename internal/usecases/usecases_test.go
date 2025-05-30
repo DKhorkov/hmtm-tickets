@@ -83,7 +83,7 @@ func TestUseCases_CreateTicket(t *testing.T) {
 
 				ticketsService.
 					EXPECT().
-					GetUserTickets(gomock.Any(), uint64(1)).
+					GetUserTickets(gomock.Any(), uint64(1), nil, nil).
 					Return([]entities.Ticket{}, nil).
 					Times(1)
 
@@ -182,7 +182,7 @@ func TestUseCases_CreateTicket(t *testing.T) {
 
 				ticketsService.
 					EXPECT().
-					GetUserTickets(gomock.Any(), uint64(1)).
+					GetUserTickets(gomock.Any(), uint64(1), nil, nil).
 					Return([]entities.Ticket{{
 						Name:        "Test Ticket",
 						Description: "Test Description",
@@ -223,7 +223,7 @@ func TestUseCases_CreateTicket(t *testing.T) {
 
 				ticketsService.
 					EXPECT().
-					GetUserTickets(gomock.Any(), uint64(1)).
+					GetUserTickets(gomock.Any(), uint64(1), nil, nil).
 					Return([]entities.Ticket{}, nil).
 					Times(1)
 
@@ -395,7 +395,7 @@ func TestUseCases_GetTicketByID(t *testing.T) {
 	}
 }
 
-func TestUseCases_GetAllTickets(t *testing.T) {
+func TestUseCases_GetTickets(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	ticketsService := mockservices.NewMockTicketsService(ctrl)
 	respondsService := mockservices.NewMockRespondsService(ctrl)
@@ -415,6 +415,8 @@ func TestUseCases_GetAllTickets(t *testing.T) {
 
 	testCases := []struct {
 		name       string
+		pagination *entities.Pagination
+		filters    *entities.TicketsFilters
 		setupMocks func(
 			ticketsService *mockservices.MockTicketsService,
 			respondsService *mockservices.MockRespondsService,
@@ -427,6 +429,19 @@ func TestUseCases_GetAllTickets(t *testing.T) {
 	}{
 		{
 			name: "success",
+			pagination: &entities.Pagination{
+				Limit:  pointers.New[uint64](1),
+				Offset: pointers.New[uint64](1),
+			},
+			filters: &entities.TicketsFilters{
+				Search:              pointers.New("ticket"),
+				PriceCeil:           pointers.New[float32](1000),
+				PriceFloor:          pointers.New[float32](10),
+				QuantityFloor:       pointers.New[uint32](1),
+				CategoryIDs:         []uint32{1},
+				TagIDs:              []uint32{1},
+				CreatedAtOrderByAsc: pointers.New(true),
+			},
 			setupMocks: func(
 				ticketsService *mockservices.MockTicketsService,
 				respondsService *mockservices.MockRespondsService,
@@ -436,7 +451,22 @@ func TestUseCases_GetAllTickets(t *testing.T) {
 			) {
 				ticketsService.
 					EXPECT().
-					GetAllTickets(gomock.Any()).
+					GetTickets(
+						gomock.Any(),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+						&entities.TicketsFilters{
+							Search:              pointers.New("ticket"),
+							PriceCeil:           pointers.New[float32](1000),
+							PriceFloor:          pointers.New[float32](10),
+							QuantityFloor:       pointers.New[uint32](1),
+							CategoryIDs:         []uint32{1},
+							TagIDs:              []uint32{1},
+							CreatedAtOrderByAsc: pointers.New(true),
+						},
+					).
 					Return([]entities.Ticket{{ID: 1}}, nil).
 					Times(1)
 			},
@@ -445,6 +475,19 @@ func TestUseCases_GetAllTickets(t *testing.T) {
 		},
 		{
 			name: "error",
+			pagination: &entities.Pagination{
+				Limit:  pointers.New[uint64](1),
+				Offset: pointers.New[uint64](1),
+			},
+			filters: &entities.TicketsFilters{
+				Search:              pointers.New("ticket"),
+				PriceCeil:           pointers.New[float32](1000),
+				PriceFloor:          pointers.New[float32](10),
+				QuantityFloor:       pointers.New[uint32](1),
+				CategoryIDs:         []uint32{1},
+				TagIDs:              []uint32{1},
+				CreatedAtOrderByAsc: pointers.New(true),
+			},
 			setupMocks: func(
 				ticketsService *mockservices.MockTicketsService,
 				respondsService *mockservices.MockRespondsService,
@@ -454,7 +497,22 @@ func TestUseCases_GetAllTickets(t *testing.T) {
 			) {
 				ticketsService.
 					EXPECT().
-					GetAllTickets(gomock.Any()).
+					GetTickets(
+						gomock.Any(),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+						&entities.TicketsFilters{
+							Search:              pointers.New("ticket"),
+							PriceCeil:           pointers.New[float32](1000),
+							PriceFloor:          pointers.New[float32](10),
+							QuantityFloor:       pointers.New[uint32](1),
+							CategoryIDs:         []uint32{1},
+							TagIDs:              []uint32{1},
+							CreatedAtOrderByAsc: pointers.New(true),
+						},
+					).
 					Return(nil, errors.New("fetch failed")).
 					Times(1)
 			},
@@ -468,7 +526,7 @@ func TestUseCases_GetAllTickets(t *testing.T) {
 			if tc.setupMocks != nil {
 				tc.setupMocks(ticketsService, respondsService, toysService, natsPublisher, logger)
 			}
-			tickets, err := useCases.GetAllTickets(context.Background())
+			tickets, err := useCases.GetTickets(context.Background(), tc.pagination, tc.filters)
 			if tc.errorExpected {
 				require.Error(t, err)
 			} else {
@@ -499,6 +557,8 @@ func TestUseCases_GetUserTickets(t *testing.T) {
 
 	testCases := []struct {
 		name       string
+		pagination *entities.Pagination
+		filters    *entities.TicketsFilters
 		userID     uint64
 		setupMocks func(
 			ticketsService *mockservices.MockTicketsService,
@@ -513,6 +573,19 @@ func TestUseCases_GetUserTickets(t *testing.T) {
 		{
 			name:   "success",
 			userID: 1,
+			pagination: &entities.Pagination{
+				Limit:  pointers.New[uint64](1),
+				Offset: pointers.New[uint64](1),
+			},
+			filters: &entities.TicketsFilters{
+				Search:              pointers.New("ticket"),
+				PriceCeil:           pointers.New[float32](1000),
+				PriceFloor:          pointers.New[float32](10),
+				QuantityFloor:       pointers.New[uint32](1),
+				CategoryIDs:         []uint32{1},
+				TagIDs:              []uint32{1},
+				CreatedAtOrderByAsc: pointers.New(true),
+			},
 			setupMocks: func(
 				ticketsService *mockservices.MockTicketsService,
 				respondsService *mockservices.MockRespondsService,
@@ -522,7 +595,23 @@ func TestUseCases_GetUserTickets(t *testing.T) {
 			) {
 				ticketsService.
 					EXPECT().
-					GetUserTickets(gomock.Any(), uint64(1)).
+					GetUserTickets(
+						gomock.Any(),
+						uint64(1),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+						&entities.TicketsFilters{
+							Search:              pointers.New("ticket"),
+							PriceCeil:           pointers.New[float32](1000),
+							PriceFloor:          pointers.New[float32](10),
+							QuantityFloor:       pointers.New[uint32](1),
+							CategoryIDs:         []uint32{1},
+							TagIDs:              []uint32{1},
+							CreatedAtOrderByAsc: pointers.New(true),
+						},
+					).
 					Return([]entities.Ticket{{ID: 1, UserID: 1}}, nil).
 					Times(1)
 			},
@@ -532,6 +621,19 @@ func TestUseCases_GetUserTickets(t *testing.T) {
 		{
 			name:   "error",
 			userID: 1,
+			pagination: &entities.Pagination{
+				Limit:  pointers.New[uint64](1),
+				Offset: pointers.New[uint64](1),
+			},
+			filters: &entities.TicketsFilters{
+				Search:              pointers.New("ticket"),
+				PriceCeil:           pointers.New[float32](1000),
+				PriceFloor:          pointers.New[float32](10),
+				QuantityFloor:       pointers.New[uint32](1),
+				CategoryIDs:         []uint32{1},
+				TagIDs:              []uint32{1},
+				CreatedAtOrderByAsc: pointers.New(true),
+			},
 			setupMocks: func(
 				ticketsService *mockservices.MockTicketsService,
 				respondsService *mockservices.MockRespondsService,
@@ -541,7 +643,23 @@ func TestUseCases_GetUserTickets(t *testing.T) {
 			) {
 				ticketsService.
 					EXPECT().
-					GetUserTickets(gomock.Any(), uint64(1)).
+					GetUserTickets(
+						gomock.Any(),
+						uint64(1),
+						&entities.Pagination{
+							Limit:  pointers.New[uint64](1),
+							Offset: pointers.New[uint64](1),
+						},
+						&entities.TicketsFilters{
+							Search:              pointers.New("ticket"),
+							PriceCeil:           pointers.New[float32](1000),
+							PriceFloor:          pointers.New[float32](10),
+							QuantityFloor:       pointers.New[uint32](1),
+							CategoryIDs:         []uint32{1},
+							TagIDs:              []uint32{1},
+							CreatedAtOrderByAsc: pointers.New(true),
+						},
+					).
 					Return(nil, errors.New("fetch failed")).
 					Times(1)
 			},
@@ -555,7 +673,7 @@ func TestUseCases_GetUserTickets(t *testing.T) {
 			if tc.setupMocks != nil {
 				tc.setupMocks(ticketsService, respondsService, toysService, natsPublisher, logger)
 			}
-			tickets, err := useCases.GetUserTickets(context.Background(), tc.userID)
+			tickets, err := useCases.GetUserTickets(context.Background(), tc.userID, tc.pagination, tc.filters)
 			if tc.errorExpected {
 				require.Error(t, err)
 			} else {
@@ -1929,12 +2047,199 @@ func TestUseCases_UpdateTicket(t *testing.T) {
 			if tc.setupMocks != nil {
 				tc.setupMocks(ticketsService, respondsService, toysService, natsPublisher, logger)
 			}
+
 			err := useCases.UpdateTicket(context.Background(), tc.ticketData)
 			if tc.errorExpected {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestUseCases_CountTickets(t *testing.T) {
+	testCases := []struct {
+		name       string
+		filters    *entities.TicketsFilters
+		setupMocks func(
+			ticketsService *mockservices.MockTicketsService,
+			respondsService *mockservices.MockRespondsService,
+			toysService *mockservices.MockToysService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+		)
+		expected      uint64
+		errorExpected bool
+	}{
+		{
+			name: "success",
+			filters: &entities.TicketsFilters{
+				Search:              pointers.New("toy2"),
+				PriceCeil:           pointers.New[float32](1000),
+				PriceFloor:          pointers.New[float32](10),
+				QuantityFloor:       pointers.New[uint32](1),
+				CategoryIDs:         []uint32{1},
+				TagIDs:              []uint32{1},
+				CreatedAtOrderByAsc: pointers.New(true),
+			},
+			setupMocks: func(
+				ticketsService *mockservices.MockTicketsService,
+				respondsService *mockservices.MockRespondsService,
+				toysService *mockservices.MockToysService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+			) {
+				ticketsService.
+					EXPECT().
+					CountTickets(
+						gomock.Any(),
+						&entities.TicketsFilters{
+							Search:              pointers.New("toy2"),
+							PriceCeil:           pointers.New[float32](1000),
+							PriceFloor:          pointers.New[float32](10),
+							QuantityFloor:       pointers.New[uint32](1),
+							CategoryIDs:         []uint32{1},
+							TagIDs:              []uint32{1},
+							CreatedAtOrderByAsc: pointers.New(true),
+						},
+					).
+					Return(uint64(1), nil).
+					Times(1)
+			},
+			expected: 1,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	ticketsService := mockservices.NewMockTicketsService(ctrl)
+	respondsService := mockservices.NewMockRespondsService(ctrl)
+	toysService := mockservices.NewMockToysService(ctrl)
+	natsPublisher := mocknats.NewMockPublisher(ctrl)
+	logger := mocklogging.NewMockLogger(ctrl)
+	natsConfig := config.NATSConfig{
+		Subjects: config.NATSSubjects{
+			TicketUpdated: "update.ticket",
+		},
+	}
+
+	useCases := New(
+		ticketsService,
+		respondsService,
+		toysService,
+		natsPublisher,
+		natsConfig,
+		logger,
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(ticketsService, respondsService, toysService, natsPublisher, logger)
+			}
+
+			actual, err := useCases.CountTickets(context.Background(), tc.filters)
+			if tc.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			require.Equal(t, tc.expected, actual)
+		})
+	}
+}
+func TestUseCases_CountUserTickets(t *testing.T) {
+	testCases := []struct {
+		name       string
+		userID     uint64
+		filters    *entities.TicketsFilters
+		setupMocks func(
+			ticketsService *mockservices.MockTicketsService,
+			respondsService *mockservices.MockRespondsService,
+			toysService *mockservices.MockToysService,
+			natsPublisher *mocknats.MockPublisher,
+			logger *mocklogging.MockLogger,
+		)
+		expected      uint64
+		errorExpected bool
+	}{
+		{
+			name:   "success",
+			userID: 1,
+			filters: &entities.TicketsFilters{
+				Search:              pointers.New("toy2"),
+				PriceCeil:           pointers.New[float32](1000),
+				PriceFloor:          pointers.New[float32](10),
+				QuantityFloor:       pointers.New[uint32](1),
+				CategoryIDs:         []uint32{1},
+				TagIDs:              []uint32{1},
+				CreatedAtOrderByAsc: pointers.New(true),
+			},
+			setupMocks: func(
+				ticketsService *mockservices.MockTicketsService,
+				respondsService *mockservices.MockRespondsService,
+				toysService *mockservices.MockToysService,
+				natsPublisher *mocknats.MockPublisher,
+				logger *mocklogging.MockLogger,
+			) {
+				ticketsService.
+					EXPECT().
+					CountUserTickets(
+						gomock.Any(),
+						uint64(1),
+						&entities.TicketsFilters{
+							Search:              pointers.New("toy2"),
+							PriceCeil:           pointers.New[float32](1000),
+							PriceFloor:          pointers.New[float32](10),
+							QuantityFloor:       pointers.New[uint32](1),
+							CategoryIDs:         []uint32{1},
+							TagIDs:              []uint32{1},
+							CreatedAtOrderByAsc: pointers.New(true),
+						},
+					).
+					Return(uint64(1), nil).
+					Times(1)
+			},
+			expected: 1,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	ticketsService := mockservices.NewMockTicketsService(ctrl)
+	respondsService := mockservices.NewMockRespondsService(ctrl)
+	toysService := mockservices.NewMockToysService(ctrl)
+	natsPublisher := mocknats.NewMockPublisher(ctrl)
+	logger := mocklogging.NewMockLogger(ctrl)
+	natsConfig := config.NATSConfig{
+		Subjects: config.NATSSubjects{
+			TicketUpdated: "update.ticket",
+		},
+	}
+
+	useCases := New(
+		ticketsService,
+		respondsService,
+		toysService,
+		natsPublisher,
+		natsConfig,
+		logger,
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setupMocks != nil {
+				tc.setupMocks(ticketsService, respondsService, toysService, natsPublisher, logger)
+			}
+
+			actual, err := useCases.CountUserTickets(context.Background(), tc.userID, tc.filters)
+			if tc.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			require.Equal(t, tc.expected, actual)
 		})
 	}
 }

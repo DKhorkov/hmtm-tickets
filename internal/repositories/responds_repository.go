@@ -145,7 +145,7 @@ func (repo *RespondsRepository) GetTicketResponds(
 		Select(selectAllColumns).
 		From(respondsTableName).
 		Where(sq.Eq{ticketIDColumnName: ticketID}).
-		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, desc)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
@@ -214,7 +214,7 @@ func (repo *RespondsRepository) GetMasterResponds(
 		Select(selectAllColumns).
 		From(respondsTableName).
 		Where(sq.Eq{masterIDColumnName: masterID}).
-		OrderBy(fmt.Sprintf("%s %s", idColumnName, DESC)).
+		OrderBy(fmt.Sprintf("%s %s", idColumnName, desc)).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/DKhorkov/hmtm-tickets/api/protobuf/generated/go/tickets"
 )
@@ -53,7 +52,7 @@ func main() {
 	})
 	fmt.Println("ticket by ID:", ticket, "err:", err)
 
-	allTickets, err := client.GetTickets(ctx, &emptypb.Empty{})
+	allTickets, err := client.GetTickets(ctx, &tickets.GetTicketsIn{})
 	fmt.Println("allTickets:", allTickets, "err:", err)
 
 	userTickets, err := client.GetUserTickets(ctx, &tickets.GetUserTicketsIn{
