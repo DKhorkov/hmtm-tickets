@@ -13,8 +13,19 @@ type TicketsRepository interface {
 		ticketData entities.CreateTicketDTO,
 	) (ticketID uint64, err error)
 	GetTicketByID(ctx context.Context, id uint64) (*entities.Ticket, error)
-	GetAllTickets(ctx context.Context) ([]entities.Ticket, error)
-	GetUserTickets(ctx context.Context, userID uint64) ([]entities.Ticket, error)
+	GetTickets(
+		ctx context.Context,
+		pagination *entities.Pagination,
+		filters *entities.TicketsFilters,
+	) ([]entities.Ticket, error)
+	CountTickets(ctx context.Context, filters *entities.TicketsFilters) (uint64, error)
+	GetUserTickets(
+		ctx context.Context,
+		userID uint64,
+		pagination *entities.Pagination,
+		filters *entities.TicketsFilters,
+	) ([]entities.Ticket, error)
+	CountUserTickets(ctx context.Context, userID uint64, filters *entities.TicketsFilters) (uint64, error)
 	DeleteTicket(ctx context.Context, id uint64) error
 	UpdateTicket(ctx context.Context, ticketData entities.UpdateTicketDTO) error
 }

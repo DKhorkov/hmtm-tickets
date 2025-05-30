@@ -67,15 +67,33 @@ func (useCases *UseCases) GetTicketByID(ctx context.Context, id uint64) (*entiti
 	return useCases.ticketsService.GetTicketByID(ctx, id)
 }
 
-func (useCases *UseCases) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
-	return useCases.ticketsService.GetAllTickets(ctx)
+func (useCases *UseCases) GetTickets(
+	ctx context.Context,
+	pagination *entities.Pagination,
+	filters *entities.TicketsFilters,
+) ([]entities.Ticket, error) {
+	return useCases.ticketsService.GetTickets(ctx, pagination, filters)
+}
+
+func (useCases *UseCases) CountTickets(ctx context.Context, filters *entities.TicketsFilters) (uint64, error) {
+	return useCases.ticketsService.CountTickets(ctx, filters)
 }
 
 func (useCases *UseCases) GetUserTickets(
 	ctx context.Context,
 	userID uint64,
+	pagination *entities.Pagination,
+	filters *entities.TicketsFilters,
 ) ([]entities.Ticket, error) {
-	return useCases.ticketsService.GetUserTickets(ctx, userID)
+	return useCases.ticketsService.GetUserTickets(ctx, userID, pagination, filters)
+}
+
+func (useCases *UseCases) CountUserTickets(
+	ctx context.Context,
+	userID uint64,
+	filters *entities.TicketsFilters,
+) (uint64, error) {
+	return useCases.ticketsService.CountUserTickets(ctx, userID, filters)
 }
 
 func (useCases *UseCases) RespondToTicket(
@@ -368,7 +386,7 @@ func (useCases *UseCases) checkTicketExistence(
 	ctx context.Context,
 	ticketData entities.CreateTicketDTO,
 ) bool {
-	tickets, err := useCases.GetUserTickets(ctx, ticketData.UserID)
+	tickets, err := useCases.GetUserTickets(ctx, ticketData.UserID, nil, nil)
 	if err == nil {
 		for _, ticket := range tickets {
 			if ticket.Name == ticketData.Name &&

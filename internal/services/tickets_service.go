@@ -52,15 +52,33 @@ func (service *TicketsService) GetTicketByID(
 	return ticket, nil
 }
 
-func (service *TicketsService) GetAllTickets(ctx context.Context) ([]entities.Ticket, error) {
-	return service.ticketsRepository.GetAllTickets(ctx)
+func (service *TicketsService) GetTickets(
+	ctx context.Context,
+	pagination *entities.Pagination,
+	filters *entities.TicketsFilters,
+) ([]entities.Ticket, error) {
+	return service.ticketsRepository.GetTickets(ctx, pagination, filters)
+}
+
+func (service *TicketsService) CountTickets(ctx context.Context, filters *entities.TicketsFilters) (uint64, error) {
+	return service.ticketsRepository.CountTickets(ctx, filters)
 }
 
 func (service *TicketsService) GetUserTickets(
 	ctx context.Context,
 	userID uint64,
+	pagination *entities.Pagination,
+	filters *entities.TicketsFilters,
 ) ([]entities.Ticket, error) {
-	return service.ticketsRepository.GetUserTickets(ctx, userID)
+	return service.ticketsRepository.GetUserTickets(ctx, userID, pagination, filters)
+}
+
+func (service *TicketsService) CountUserTickets(
+	ctx context.Context,
+	userID uint64,
+	filters *entities.TicketsFilters,
+) (uint64, error) {
+	return service.ticketsRepository.CountUserTickets(ctx, userID, filters)
 }
 
 func (service *TicketsService) DeleteTicket(ctx context.Context, id uint64) error {

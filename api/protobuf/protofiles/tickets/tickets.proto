@@ -11,8 +11,10 @@ option go_package = "github.com/DKhorkov/hmtm-tickets/api/protobuf/tickets;ticke
 service TicketsService {
   rpc CreateTicket(CreateTicketIn) returns (CreateTicketOut) {}
   rpc GetTicket(GetTicketIn) returns (GetTicketOut) {}
-  rpc GetTickets(google.protobuf.Empty) returns (GetTicketsOut) {}
+  rpc GetTickets(GetTicketsIn) returns (GetTicketsOut) {}
+  rpc CountTickets(CountTicketsIn) returns (CountOut) {}
   rpc GetUserTickets(GetUserTicketsIn) returns (GetTicketsOut) {}
+  rpc CountUserTickets(CountUserTicketsIn) returns (CountOut) {}
   rpc DeleteTicket(DeleteTicketIn) returns (google.protobuf.Empty) {}
   rpc UpdateTicket(UpdateTicketIn) returns (google.protobuf.Empty) {}
 }
@@ -58,12 +60,19 @@ message GetTicketOut {
   google.protobuf.Timestamp updatedAt = 11;
 }
 
+message GetTicketsIn {
+  optional Pagination pagination = 1;
+  optional TicketsFilters filters = 2;
+}
+
 message GetTicketsOut {
   repeated GetTicketOut tickets = 1;
 }
 
 message GetUserTicketsIn {
   uint64 userID = 1;
+  optional Pagination pagination = 2;
+  optional TicketsFilters filters = 3;
 }
 
 message DeleteTicketIn {
@@ -79,4 +88,32 @@ message UpdateTicketIn {
   optional uint32 categoryID = 6;
   repeated uint32 tagIDs = 7;
   repeated string attachments = 8;
+}
+
+message CountTicketsIn {
+  optional TicketsFilters filters = 1;
+}
+
+message CountUserTicketsIn {
+  uint64 userID = 1;
+  optional TicketsFilters filters = 2;
+}
+
+message CountOut {
+  uint64 count = 1;
+}
+
+message Pagination {
+  optional uint64 limit = 1;
+  optional uint64 offset = 2;
+}
+
+message TicketsFilters {
+  optional string search = 1;
+  optional float priceCeil = 2;  // max price
+  optional float priceFloor = 3;  // min price
+  optional uint32 quantityFloor = 4;  // min quantity
+  repeated uint32 categoryIDs = 5;
+  repeated uint32 tagIDs = 6;
+  optional bool createdAtOrderByAsc = 7;
 }

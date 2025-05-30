@@ -21,8 +21,10 @@ const _ = grpc.SupportPackageIsVersion7
 type TicketsServiceClient interface {
 	CreateTicket(ctx context.Context, in *CreateTicketIn, opts ...grpc.CallOption) (*CreateTicketOut, error)
 	GetTicket(ctx context.Context, in *GetTicketIn, opts ...grpc.CallOption) (*GetTicketOut, error)
-	GetTickets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetTicketsOut, error)
+	GetTickets(ctx context.Context, in *GetTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
+	CountTickets(ctx context.Context, in *CountTicketsIn, opts ...grpc.CallOption) (*CountOut, error)
 	GetUserTickets(ctx context.Context, in *GetUserTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error)
+	CountUserTickets(ctx context.Context, in *CountUserTicketsIn, opts ...grpc.CallOption) (*CountOut, error)
 	DeleteTicket(ctx context.Context, in *DeleteTicketIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateTicket(ctx context.Context, in *UpdateTicketIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -53,9 +55,18 @@ func (c *ticketsServiceClient) GetTicket(ctx context.Context, in *GetTicketIn, o
 	return out, nil
 }
 
-func (c *ticketsServiceClient) GetTickets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetTicketsOut, error) {
+func (c *ticketsServiceClient) GetTickets(ctx context.Context, in *GetTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error) {
 	out := new(GetTicketsOut)
 	err := c.cc.Invoke(ctx, "/tickets.TicketsService/GetTickets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ticketsServiceClient) CountTickets(ctx context.Context, in *CountTicketsIn, opts ...grpc.CallOption) (*CountOut, error) {
+	out := new(CountOut)
+	err := c.cc.Invoke(ctx, "/tickets.TicketsService/CountTickets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +76,15 @@ func (c *ticketsServiceClient) GetTickets(ctx context.Context, in *emptypb.Empty
 func (c *ticketsServiceClient) GetUserTickets(ctx context.Context, in *GetUserTicketsIn, opts ...grpc.CallOption) (*GetTicketsOut, error) {
 	out := new(GetTicketsOut)
 	err := c.cc.Invoke(ctx, "/tickets.TicketsService/GetUserTickets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ticketsServiceClient) CountUserTickets(ctx context.Context, in *CountUserTicketsIn, opts ...grpc.CallOption) (*CountOut, error) {
+	out := new(CountOut)
+	err := c.cc.Invoke(ctx, "/tickets.TicketsService/CountUserTickets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +115,10 @@ func (c *ticketsServiceClient) UpdateTicket(ctx context.Context, in *UpdateTicke
 type TicketsServiceServer interface {
 	CreateTicket(context.Context, *CreateTicketIn) (*CreateTicketOut, error)
 	GetTicket(context.Context, *GetTicketIn) (*GetTicketOut, error)
-	GetTickets(context.Context, *emptypb.Empty) (*GetTicketsOut, error)
+	GetTickets(context.Context, *GetTicketsIn) (*GetTicketsOut, error)
+	CountTickets(context.Context, *CountTicketsIn) (*CountOut, error)
 	GetUserTickets(context.Context, *GetUserTicketsIn) (*GetTicketsOut, error)
+	CountUserTickets(context.Context, *CountUserTicketsIn) (*CountOut, error)
 	DeleteTicket(context.Context, *DeleteTicketIn) (*emptypb.Empty, error)
 	UpdateTicket(context.Context, *UpdateTicketIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedTicketsServiceServer()
@@ -112,11 +134,17 @@ func (UnimplementedTicketsServiceServer) CreateTicket(context.Context, *CreateTi
 func (UnimplementedTicketsServiceServer) GetTicket(context.Context, *GetTicketIn) (*GetTicketOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTicket not implemented")
 }
-func (UnimplementedTicketsServiceServer) GetTickets(context.Context, *emptypb.Empty) (*GetTicketsOut, error) {
+func (UnimplementedTicketsServiceServer) GetTickets(context.Context, *GetTicketsIn) (*GetTicketsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTickets not implemented")
+}
+func (UnimplementedTicketsServiceServer) CountTickets(context.Context, *CountTicketsIn) (*CountOut, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CountTickets not implemented")
 }
 func (UnimplementedTicketsServiceServer) GetUserTickets(context.Context, *GetUserTicketsIn) (*GetTicketsOut, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserTickets not implemented")
+}
+func (UnimplementedTicketsServiceServer) CountUserTickets(context.Context, *CountUserTicketsIn) (*CountOut, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CountUserTickets not implemented")
 }
 func (UnimplementedTicketsServiceServer) DeleteTicket(context.Context, *DeleteTicketIn) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTicket not implemented")
@@ -174,7 +202,7 @@ func _TicketsService_GetTicket_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _TicketsService_GetTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(GetTicketsIn)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -186,7 +214,25 @@ func _TicketsService_GetTickets_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/tickets.TicketsService/GetTickets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TicketsServiceServer).GetTickets(ctx, req.(*emptypb.Empty))
+		return srv.(TicketsServiceServer).GetTickets(ctx, req.(*GetTicketsIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TicketsService_CountTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountTicketsIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TicketsServiceServer).CountTickets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tickets.TicketsService/CountTickets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TicketsServiceServer).CountTickets(ctx, req.(*CountTicketsIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -205,6 +251,24 @@ func _TicketsService_GetUserTickets_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TicketsServiceServer).GetUserTickets(ctx, req.(*GetUserTicketsIn))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TicketsService_CountUserTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountUserTicketsIn)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TicketsServiceServer).CountUserTickets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tickets.TicketsService/CountUserTickets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TicketsServiceServer).CountUserTickets(ctx, req.(*CountUserTicketsIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -265,8 +329,16 @@ var TicketsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TicketsService_GetTickets_Handler,
 		},
 		{
+			MethodName: "CountTickets",
+			Handler:    _TicketsService_CountTickets_Handler,
+		},
+		{
 			MethodName: "GetUserTickets",
 			Handler:    _TicketsService_GetUserTickets_Handler,
+		},
+		{
+			MethodName: "CountUserTickets",
+			Handler:    _TicketsService_CountUserTickets_Handler,
 		},
 		{
 			MethodName: "DeleteTicket",

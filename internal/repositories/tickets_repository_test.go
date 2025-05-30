@@ -204,7 +204,7 @@ func (s *TicketsRepositoryTestSuite) TestGetTicketByIDNonExisting() {
 	s.Nil(ticket)
 }
 
-func (s *TicketsRepositoryTestSuite) TestGetAllTicketsWithExisting() {
+func (s *TicketsRepositoryTestSuite) TestGetTicketsWithExistingTickets() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -223,25 +223,110 @@ func (s *TicketsRepositoryTestSuite) TestGetAllTicketsWithExisting() {
 	)
 	s.NoError(err)
 
-	tickets, err := s.ticketsRepository.GetAllTickets(s.ctx)
+	tickets, err := s.ticketsRepository.GetTickets(s.ctx, nil, nil)
 	s.NoError(err)
 	s.NotEmpty(tickets)
 	s.Equal(2, len(tickets))
 }
 
-func (s *TicketsRepositoryTestSuite) TestGetAllTicketsWithoutExisting() {
+func (s *TicketsRepositoryTestSuite) TestGetTicketsWithExistingTicketsAndPagination() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
 		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
-	tickets, err := s.ticketsRepository.GetAllTickets(s.ctx)
+	createdAt := time.Now().UTC()
+	price := pointers.New[float32](99.99)
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, 1, 2, "Test Ticket", "Test Description", price, 5, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	pagination := &entities.Pagination{
+		Limit:  pointers.New[uint64](1),
+		Offset: pointers.New[uint64](2),
+	}
+
+	tickets, err := s.ticketsRepository.GetTickets(s.ctx, pagination, nil)
 	s.NoError(err)
 	s.Empty(tickets)
 }
 
-func (s *TicketsRepositoryTestSuite) TestGetUserTicketsWithExisting() {
+func (s *TicketsRepositoryTestSuite) TestGetTicketsWithExistingTicketsAndFilters() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(3) // Основной + getToyTags + getToyAttachments
+
+	createdAt := time.Now().UTC()
+	price := pointers.New[float32](99.99)
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, 1, 2, "Test Ticket", "Test Description", price, 5, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_tags_associations (id, ticket_id, tag_id) VALUES "+
+			"(?, ?, ?), (?, ?, ?)",
+		1, 1, 10,
+		2, 1, 20,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_attachments (id, ticket_id, link, created_at, updated_at) VALUES "+
+			"(?, ?, ?, ?, ?)",
+		1, 1, "file1.jpg", createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	filters := &entities.TicketsFilters{
+		//Search:              pointers.New("ticket"), // no ILike in sqlite
+		PriceCeil:           pointers.New[float32](1000),
+		PriceFloor:          pointers.New[float32](10),
+		QuantityFloor:       pointers.New[uint32](1),
+		CategoryIDs:         []uint32{2},
+		TagIDs:              []uint32{10, 20},
+		CreatedAtOrderByAsc: pointers.New(true),
+	}
+
+	tickets, err := s.ticketsRepository.GetTickets(s.ctx, nil, filters)
+	s.NoError(err)
+	s.NotEmpty(tickets)
+	s.Equal(1, len(tickets))
+	s.Equal(uint64(1), tickets[0].UserID)
+	s.Equal(uint32(2), tickets[0].CategoryID)
+	s.Equal("Test Ticket", tickets[0].Name)
+	s.Equal("Test Description", tickets[0].Description)
+	s.Equal(uint32(5), tickets[0].Quantity)
+	s.Contains(tickets[0].TagIDs, uint32(10), uint32(20))
+	s.Equal(1, len(tickets[0].Attachments))
+	s.Equal("file1.jpg", tickets[0].Attachments[0].Link)
+}
+
+func (s *TicketsRepositoryTestSuite) TestGetTicketsWithoutExistingTickets() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	tickets, err := s.ticketsRepository.GetTickets(s.ctx, nil, nil)
+	s.NoError(err)
+	s.Empty(tickets)
+}
+
+func (s *TicketsRepositoryTestSuite) TestGetUserTicketsWithExistingTickets() {
 	s.traceProvider.
 		EXPECT().
 		Span(gomock.Any(), gomock.Any()).
@@ -260,7 +345,7 @@ func (s *TicketsRepositoryTestSuite) TestGetUserTicketsWithExisting() {
 	)
 	s.NoError(err)
 
-	tickets, err := s.ticketsRepository.GetUserTickets(s.ctx, userID)
+	tickets, err := s.ticketsRepository.GetUserTickets(s.ctx, userID, nil, nil)
 	s.NoError(err)
 	s.NotEmpty(tickets)
 	s.Equal(2, len(tickets))
@@ -273,9 +358,96 @@ func (s *TicketsRepositoryTestSuite) TestGetUserTicketsWithoutExisting() {
 		Return(context.Background(), mocktracing.NewMockSpan()).
 		Times(1)
 
-	tickets, err := s.ticketsRepository.GetUserTickets(s.ctx, 999)
+	tickets, err := s.ticketsRepository.GetUserTickets(s.ctx, 999, nil, nil)
 	s.NoError(err)
 	s.Empty(tickets)
+}
+
+func (s *TicketsRepositoryTestSuite) TestGetUserTicketsWithExistingTicketsAndPagination() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	createdAt := time.Now().UTC()
+	price := pointers.New[float32](99.99)
+	userID := uint64(1)
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, userID, 2, "Test Ticket", "Test Description", price, 5, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	pagination := &entities.Pagination{
+		Limit:  pointers.New[uint64](1),
+		Offset: pointers.New[uint64](2),
+	}
+
+	tickets, err := s.ticketsRepository.GetUserTickets(s.ctx, userID, pagination, nil)
+	s.NoError(err)
+	s.Empty(tickets)
+}
+
+func (s *TicketsRepositoryTestSuite) TestGetUserTicketsWithExistingTicketsAndFilters() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(3) // Основной + getToyTags + getToyAttachments
+
+	createdAt := time.Now().UTC()
+	price := pointers.New[float32](99.99)
+	userID := uint64(1)
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, userID, 2, "Test Ticket", "Test Description", price, 5, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_tags_associations (id, ticket_id, tag_id) VALUES "+
+			"(?, ?, ?), (?, ?, ?)",
+		1, 1, 10,
+		2, 1, 20,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_attachments (id, ticket_id, link, created_at, updated_at) VALUES "+
+			"(?, ?, ?, ?, ?)",
+		1, 1, "file1.jpg", createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	filters := &entities.TicketsFilters{
+		//Search:              pointers.New("ticket"), // no ILike in sqlite
+		PriceCeil:           pointers.New[float32](1000),
+		PriceFloor:          pointers.New[float32](10),
+		QuantityFloor:       pointers.New[uint32](1),
+		CategoryIDs:         []uint32{2},
+		TagIDs:              []uint32{10, 20},
+		CreatedAtOrderByAsc: pointers.New(true),
+	}
+
+	tickets, err := s.ticketsRepository.GetUserTickets(s.ctx, userID, nil, filters)
+	s.NoError(err)
+	s.NotEmpty(tickets)
+	s.Equal(1, len(tickets))
+	s.Equal(uint64(1), tickets[0].UserID)
+	s.Equal(uint32(2), tickets[0].CategoryID)
+	s.Equal("Test Ticket", tickets[0].Name)
+	s.Equal("Test Description", tickets[0].Description)
+	s.Equal(uint32(5), tickets[0].Quantity)
+	s.Contains(tickets[0].TagIDs, uint32(10), uint32(20))
+	s.Equal(1, len(tickets[0].Attachments))
+	s.Equal("file1.jpg", tickets[0].Attachments[0].Link)
 }
 
 func (s *TicketsRepositoryTestSuite) TestDeleteTicketSuccess() {
@@ -392,4 +564,168 @@ func (s *TicketsRepositoryTestSuite) TestUpdateTicketFullUpdateSuccess() {
 	s.True(priceVal.Valid)
 	s.InDelta(*newPrice, priceVal.Float64, 0.01)
 	s.Equal(newQuantity, quantity)
+}
+
+func (s *TicketsRepositoryTestSuite) TestCountTicketsWithExistingTickets() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	createdAt := time.Now().UTC()
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, 1, 2, "Old Ticket", "Old Desc", nil, 1, createdAt, createdAt,
+	)
+	s.NoError(err)
+	s.NoError(err)
+
+	count, err := s.ticketsRepository.CountTickets(s.ctx, nil)
+	s.NoError(err)
+	s.Equal(uint64(1), count)
+}
+
+func (s *TicketsRepositoryTestSuite) TestCountTicketsWithExistingTicketsAndFilters() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	createdAt := time.Now().UTC()
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, 1, 2, "Old Ticket", "Old Desc", nil, 1, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_tags_associations (id, ticket_id, tag_id) "+
+			"VALUES (?, ?, ?)",
+		1, 1, 10,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_attachments (id, ticket_id, link, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?)",
+		1, 1, "oldfile.jpg", createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	filters := &entities.TicketsFilters{
+		//Search:              pointers.New("ticket"), // no ILike in sqlite
+		PriceCeil:           pointers.New[float32](1000),
+		PriceFloor:          pointers.New[float32](10),
+		QuantityFloor:       pointers.New[uint32](1),
+		CategoryIDs:         []uint32{2},
+		TagIDs:              []uint32{10, 20},
+		CreatedAtOrderByAsc: pointers.New(true),
+	}
+
+	count, err := s.ticketsRepository.CountTickets(s.ctx, filters)
+	s.NoError(err)
+	s.Equal(uint64(0), count)
+}
+
+func (s *TicketsRepositoryTestSuite) TestCountTicketsWithoutExistingTickets() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	count, err := s.ticketsRepository.CountTickets(s.ctx, nil)
+	s.NoError(err)
+	s.Zero(count)
+}
+
+func (s *TicketsRepositoryTestSuite) TestCountUserTicketsWithExistingTickets() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	userID := uint64(1)
+	createdAt := time.Now().UTC()
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, 1, 2, "Old Ticket", "Old Desc", nil, 1, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	count, err := s.ticketsRepository.CountUserTickets(s.ctx, userID, nil)
+	s.NoError(err)
+	s.Equal(uint64(1), count)
+}
+
+func (s *TicketsRepositoryTestSuite) TestCountUserTicketsWithExistingTicketsAndFilters() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	createdAt := time.Now().UTC()
+	userID := uint64(1)
+	_, err := s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets (id, user_id, category_id, name, description, price, quantity, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		1, 1, 2, "Old Ticket", "Old Desc", 1000, 10, createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_tags_associations (id, ticket_id, tag_id) "+
+			"VALUES (?, ?, ?)",
+		1, 1, 10,
+	)
+	s.NoError(err)
+
+	_, err = s.connection.ExecContext(
+		s.ctx,
+		"INSERT INTO tickets_attachments (id, ticket_id, link, created_at, updated_at) "+
+			"VALUES (?, ?, ?, ?, ?)",
+		1, 1, "oldfile.jpg", createdAt, createdAt,
+	)
+	s.NoError(err)
+
+	filters := &entities.TicketsFilters{
+		//Search:              pointers.New("ticket"), // no ILike in sqlite
+		PriceCeil:           pointers.New[float32](1000),
+		PriceFloor:          pointers.New[float32](10),
+		QuantityFloor:       pointers.New[uint32](1),
+		CategoryIDs:         []uint32{2},
+		TagIDs:              []uint32{10, 20},
+		CreatedAtOrderByAsc: pointers.New(true),
+	}
+
+	count, err := s.ticketsRepository.CountUserTickets(s.ctx, userID, filters)
+	s.NoError(err)
+	s.Equal(uint64(0), count)
+}
+
+func (s *TicketsRepositoryTestSuite) TestCountUserTicketsWithoutExistingTickets() {
+	s.traceProvider.
+		EXPECT().
+		Span(gomock.Any(), gomock.Any()).
+		Return(context.Background(), mocktracing.NewMockSpan()).
+		Times(1)
+
+	userID := uint64(1)
+	count, err := s.ticketsRepository.CountUserTickets(s.ctx, userID, nil)
+	s.NoError(err)
+	s.Zero(count)
 }
