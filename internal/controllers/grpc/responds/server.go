@@ -44,9 +44,12 @@ func (api *ServerAPI) UpdateRespond(
 	in *tickets.UpdateRespondIn,
 ) (*emptypb.Empty, error) {
 	respondData := entities.UpdateRespondDTO{
-		ID:      in.GetID(),
-		Price:   in.Price,
-		Comment: in.Comment,
+		ID: in.GetID(),
+	}
+
+	if in != nil {
+		respondData.Price = in.Price
+		respondData.Comment = in.Comment
 	}
 
 	err := api.useCases.UpdateRespond(ctx, respondData)
@@ -103,7 +106,10 @@ func (api *ServerAPI) RespondToTicket(
 		UserID:   in.GetUserID(),
 		TicketID: in.GetTicketID(),
 		Price:    in.GetPrice(),
-		Comment:  in.Comment,
+	}
+
+	if in != nil {
+		respondData.Comment = in.Comment
 	}
 
 	respondID, err := api.useCases.RespondToTicket(ctx, respondData)
