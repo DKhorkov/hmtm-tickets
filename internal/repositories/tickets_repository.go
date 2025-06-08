@@ -34,7 +34,7 @@ const (
 	returningIDSuffix                  = "RETURNING id"
 	createdAtColumnName                = "created_at"
 	updatedAtColumnName                = "updated_at"
-	desc                               = "desc"
+	desc                               = "DESC"
 	asc                                = "ASC"
 )
 

@@ -39,7 +39,7 @@ type ServerAPI struct {
 
 func (api *ServerAPI) CountTickets(ctx context.Context, in *tickets.CountTicketsIn) (*tickets.CountOut, error) {
 	var filters *entities.TicketsFilters
-	if in.Filters != nil {
+	if in.GetFilters() != nil {
 		filters = &entities.TicketsFilters{
 			Search:              in.Filters.Search,
 			PriceCeil:           in.Filters.PriceCeil,
@@ -68,7 +68,7 @@ func (api *ServerAPI) CountTickets(ctx context.Context, in *tickets.CountTickets
 
 func (api *ServerAPI) CountUserTickets(ctx context.Context, in *tickets.CountUserTicketsIn) (*tickets.CountOut, error) {
 	var filters *entities.TicketsFilters
-	if in.Filters != nil {
+	if in.GetFilters() != nil {
 		filters = &entities.TicketsFilters{
 			Search:              in.Filters.Search,
 			PriceCeil:           in.Filters.PriceCeil,
@@ -126,13 +126,16 @@ func (api *ServerAPI) UpdateTicket(
 ) (*emptypb.Empty, error) {
 	ticketData := entities.RawUpdateTicketDTO{
 		ID:          in.GetID(),
-		CategoryID:  in.CategoryID,
-		Name:        in.Name,
-		Description: in.Description,
-		Price:       in.Price,
-		Quantity:    in.Quantity,
 		TagIDs:      in.GetTagIDs(),
 		Attachments: in.GetAttachments(),
+	}
+
+	if in != nil {
+		ticketData.CategoryID = in.CategoryID
+		ticketData.Name = in.Name
+		ticketData.Description = in.Description
+		ticketData.Price = in.Price
+		ticketData.Quantity = in.Quantity
 	}
 
 	if err := api.useCases.UpdateTicket(ctx, ticketData); err != nil {
@@ -166,10 +169,13 @@ func (api *ServerAPI) CreateTicket(
 		CategoryID:  in.GetCategoryID(),
 		Name:        in.GetName(),
 		Description: in.GetDescription(),
-		Price:       in.Price,
 		Quantity:    in.GetQuantity(),
 		TagIDs:      in.GetTagIDs(),
 		Attachments: in.GetAttachments(),
+	}
+
+	if in != nil {
+		ticketData.Price = in.Price
 	}
 
 	ticketID, err := api.useCases.CreateTicket(ctx, ticketData)
@@ -225,7 +231,7 @@ func (api *ServerAPI) GetTickets(
 	in *tickets.GetTicketsIn,
 ) (*tickets.GetTicketsOut, error) {
 	var filters *entities.TicketsFilters
-	if in.Filters != nil {
+	if in.GetFilters() != nil {
 		filters = &entities.TicketsFilters{
 			Search:              in.Filters.Search,
 			PriceCeil:           in.Filters.PriceCeil,
@@ -238,7 +244,7 @@ func (api *ServerAPI) GetTickets(
 	}
 
 	var pagination *entities.Pagination
-	if in.Pagination != nil {
+	if in.GetPagination() != nil {
 		pagination = &entities.Pagination{
 			Limit:  in.Pagination.Limit,
 			Offset: in.Pagination.Offset,
@@ -271,7 +277,7 @@ func (api *ServerAPI) GetUserTickets(
 	in *tickets.GetUserTicketsIn,
 ) (*tickets.GetTicketsOut, error) {
 	var filters *entities.TicketsFilters
-	if in.Filters != nil {
+	if in.GetFilters() != nil {
 		filters = &entities.TicketsFilters{
 			Search:              in.Filters.Search,
 			PriceCeil:           in.Filters.PriceCeil,
@@ -284,7 +290,7 @@ func (api *ServerAPI) GetUserTickets(
 	}
 
 	var pagination *entities.Pagination
-	if in.Pagination != nil {
+	if in.GetPagination() != nil {
 		pagination = &entities.Pagination{
 			Limit:  in.Pagination.Limit,
 			Offset: in.Pagination.Offset,
